@@ -1,0 +1,11 @@
+<div style="display: flex; height: 100vh; border: 1px solid black;">
+    <!-- Right Section -->
+    <div style="width: 30%; border-right: 1px solid black; overflow-y: auto;">
+        <app-product-list (selectedProduct)="showDetails($event)"></app-product-list>
+    </div>
+
+    <!-- Left Section -->
+    <div style="flex-grow: 1; padding: 10px;">
+        <app-product-details [product]="currentProduct"></app-product-details>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+let num: number = 10;
+let isActive: boolean = true;
+let name: string = "Angular";
+let strings: Array<string> = ["a", "b", "c"];
+function logMessage(): void {
+    console.log("No return value");
+}
+interface User {
+    id: number;
+    name: string;
+    isAdmin: boolean;
+}
+
+let user: User = {
+    id: 1,
+    name: " Ali ",
+    isAdmin: true
+};

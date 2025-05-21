@@ -1,0 +1,21 @@
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-product-details',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="product">
+      <h2>{{ product.name }}</h2>
+      <img src="product.image" alt="{{ product.name }}" style="width: 100%; height: auto;">
+      <p>{{ product.details }}</p>
+    </div>
+    <div *ngIf="!product">
+      <p>Please select a product to view detailss.</p>
+    </div>
+  `,
+})
+export class ProductDetailsComponent {
+  @Input() product: any;
+}

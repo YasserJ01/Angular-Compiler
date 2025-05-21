@@ -1,0 +1,23 @@
+import { Component, EventEmitter, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-product-list',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './product-list.component.html',
+  styleUrls: ['./product-list.component.css']
+})
+export class ProductListComponent {
+  @Output() selectedProduct = new EventEmitter<any>();
+
+  products = [
+    { name: 'Product 1', image: 'path-to-image-1.jpg', details: 'Details about Product 1' },
+    { name: 'Product 2', image: 'path-to-image-2.jpg', details: 'Details about Product 2' },
+    { name: 'Product 3', image: 'path-to-image-3.jpg', details: 'Details about Product 3' }
+  ];
+
+  selectProduct(product: any) {
+    this.selectedProduct.emit(product);
+  }
+}
