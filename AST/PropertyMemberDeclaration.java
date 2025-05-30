@@ -4,7 +4,7 @@ public class PropertyMemberDeclaration {
     PropertyMemberBase propertyMemberBase;
     PropertyName propertyName;
     TypeAnnotation typeAnnotation;
-    String semiColon;
+//    String semiColon;
     CallSignature callSignature;
     FunctionBody functionBody;
     AbstractDeclaration abstractDeclaration;
@@ -33,13 +33,13 @@ public class PropertyMemberDeclaration {
         this.typeAnnotation = typeAnnotation;
     }
 
-    public String getSemiColon() {
-        return semiColon;
-    }
+//    public String getSemiColon() {
+//        return semiColon;
+//    }
 
-    public void setSemiColon(String semiColon) {
-        this.semiColon = semiColon;
-    }
+//    public void setSemiColon(String semiColon) {
+//        this.semiColon = semiColon;
+//    }
 
     public CallSignature getCallSignature() {
         return callSignature;
@@ -73,13 +73,13 @@ public class PropertyMemberDeclaration {
                         propertyMemberBase +'\n'+
                         propertyName +'\n'+
                         typeAnnotation +'\n'+
-                        ", semiColon='" + semiColon + '\n'+
+//                        ", semiColon='" + semiColon + '\n'+
                         '}';
             } else {
                 return "PropertyMemberDeclaration{" +'\n'+
                         propertyMemberBase +'\n'+
                         propertyName +'\n'+
-                        ", semiColon='" + semiColon + '\n'+
+//                        ", semiColon='" + semiColon + '\n'+
                         callSignature +'\n'+
                         functionBody +'\n'+
                         '}';

@@ -3,6 +3,9 @@ package AST;
 public class HtmlAttribute {
     HtmlAttributeName htmlAttributeName;
     HtmlAttributeValue htmlAttributeValue;
+    String AngularDirective;
+    PropertyName propertyName;
+
 
     String Classe;
 
@@ -30,9 +33,31 @@ public class HtmlAttribute {
         this.htmlAttributeValue = htmlAttributeValue;
     }
 
+    public String getAngularDirective() {
+        return AngularDirective;
+    }
+
+    public void setAngularDirective(String angularDirective) {
+        AngularDirective = angularDirective;
+    }
+
+    public PropertyName getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(PropertyName propertyName) {
+        this.propertyName = propertyName;
+    }
+
     @Override
     public String toString() {
-        if (htmlAttributeValue != null) {
+        if (AngularDirective != null && propertyName != null) {
+            return "HtmlAttribute{" + '\n' +
+                    AngularDirective + '\n' +
+                    propertyName + '\n' +
+                    '}';
+        }
+        else if (htmlAttributeValue != null) {
             return "HtmlAttribute{" + '\n' +
                     htmlAttributeName + '\n' +
                     Classe + '\n' +

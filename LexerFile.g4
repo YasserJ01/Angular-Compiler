@@ -64,6 +64,10 @@ PowerAssign                : '**=';
 NullishCoalescingAssign    : '??=';
 ARROW                      : '=>';
 
+DOUBLE_L_CURLY: '{{';
+DOUBLE_R_CURLY: '}}';
+
+
 /// Null Literals
 
 NullLiteral: 'null';
@@ -180,6 +184,7 @@ StringLiteral:
     ('"' DoubleStringCharacter* '"' | '\'' SingleStringCharacter* '\''| '`'DoubleStringCharacter* '`')
 ;
 
+
 WhiteSpaces: [\t\u000B\u000C\u0020\u00A0]+ -> channel(HIDDEN);
 /// Comments
 HtmlComment         : '<!--' .*? '-->'      -> channel(HIDDEN);
@@ -206,7 +211,7 @@ mode ATTVALUE;
 
 TagEquals: Assign -> pushMode(ATTVALUE);
 
-// Fragment rules
+
 
 fragment Digit: [0-9];
 fragment DecChars: [0-9]+ '%'?;

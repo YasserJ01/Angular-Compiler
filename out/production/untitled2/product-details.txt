@@ -1,14 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+
 @Component({
   selector: 'app-product-details',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div *ngIf="product">
+    <div *ngIf=product>
       <h2>{{ product.name }}</h2>
-      <img src="product.image" alt="{{ product.name }}" style="width: 100%; height: auto;">
+      <img [src]="product.image" alt="{{ product.name }}" style="width: 100%; height: auto;">
       <p>{{ product.details }}</p>
     </div>
     <div *ngIf="!product">
@@ -18,4 +19,12 @@ import { CommonModule } from '@angular/common';
 })
 export class ProductDetailsComponent {
   @Input() product: any;
+  @Output() productt: any;
+
 }
+
+//class ProductDetailsComponent {
+//
+//}
+
+

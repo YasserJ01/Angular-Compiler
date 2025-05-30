@@ -85,11 +85,6 @@ public class ClassDeclaration {
 
     @Override
     public String toString() {
-//        if (decoratorList != null) {
-//            return "Class Declaration = " +'\n'+
-//                    "decoratorlist"+decoratorList+'\n'+
-//                    "}";
-//        }
         if (Classe != null && identifier != null && classHeritage != null && classTail != null) {
             if (decoratorList != null) {
                 if (Abstract != null) {

@@ -5,7 +5,16 @@ import java.util.List;
 
 public class HtmlContent {
     List<HtmlElement> htmlElement = new ArrayList<HtmlElement>();
-    List<ObjectExpressionSequence> objectExpressionSequences = new ArrayList<ObjectExpressionSequence>();
+
+    public List<InterpolationExpression> getInterpolationExpressions() {
+        return interpolationExpressions;
+    }
+
+    public void setInterpolationExpressions(List<InterpolationExpression> interpolationExpressions) {
+        this.interpolationExpressions = interpolationExpressions;
+    }
+
+    List<InterpolationExpression> interpolationExpressions = new ArrayList<InterpolationExpression>();
 
     public List<HtmlElement> getHtmlElement() {
         return htmlElement;
@@ -15,13 +24,13 @@ public class HtmlContent {
         this.htmlElement = htmlElement;
     }
 
-    public List<ObjectExpressionSequence> getObjectExpressionSequences() {
-        return objectExpressionSequences;
-    }
-
-    public void setObjectExpressionSequences(List<ObjectExpressionSequence> objectExpressionSequences) {
-        this.objectExpressionSequences = objectExpressionSequences;
-    }
+//    public List<InterpolationExpression> getInterpolationExpression() {
+//        return interpolationExpressions;
+//    }
+//
+//    public void setInterpolationExpression(List<InterpolationExpression> objectExpressionSequences) {
+//        this.objectExpressionSequences = objectExpressionSequences;
+//    }
 
     @Override
     public String toString() {
@@ -32,7 +41,7 @@ public class HtmlContent {
 //        }
         return "HtmlContent{" +'\n'+
                 htmlElement +'\n'+
-                objectExpressionSequences +'\n'+
+                interpolationExpressions +'\n'+
                 '}';
     }
 }

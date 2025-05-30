@@ -7,7 +7,7 @@ public class ImportFromBlock {
     ImportNamespace importNamespace;
     ImportModuleItems importModuleItems;
     ImportFrom importFrom;
-    Eos eos;
+//    Eos eos;
 
     public String getStringLiteral() {
         return StringLiteral;
@@ -49,31 +49,31 @@ public class ImportFromBlock {
         this.importFrom = importFrom;
     }
 
-    public Eos getEos() {
-        return eos;
-    }
-
-    public void setEos(Eos eos) {
-        this.eos = eos;
-    }
+//    public Eos getEos() {
+//        return eos;
+//    }
+//
+//    public void setEos(Eos eos) {
+//        this.eos = eos;
+//    }
 
     @Override
     public String toString() {
-        if (importFrom != null && eos != null) {
+        if (importFrom != null) {
             if (importDefault != null) {
                 if (importNamespace != null) {
                     return "ImportFromBlock{" +
                             ", importDefault=" + importDefault +
                             ", importNamespace=" + importNamespace +
                             ", importFrom=" + importFrom +
-                            ", eos=" + eos +
+//                            ", eos=" + eos +
                             '}';
                 } else {
                     return "ImportFromBlock{" +'\n'+
                             importDefault + '\n' +
                             importModuleItems + '\n' +
                             importFrom + '\n' +
-                            eos + '\n' +
+//                            eos + '\n' +
                             '}';
                 }
             } else {
@@ -81,20 +81,20 @@ public class ImportFromBlock {
                     return "ImportFromBlock{" +
                             ", importNamespace=" + importNamespace +
                             ", importFrom=" + importFrom +
-                            ", eos=" + eos +
+//                            ", eos=" + eos +
                             '}';
                 } else {
                     return "ImportFromBlock{" +
                             '\n'+ importModuleItems +
                             '\n' + importFrom +
-                            '\n' + eos +
+//                            '\n' + eos +
                             '}';
                 }
             }
         }
         return "ImportFromBlock{" +
                 "StringLiteral='" + StringLiteral + '\'' +
-                ", eos=" + eos +
+//                ", eos=" + eos +
                 '}';
     }
 

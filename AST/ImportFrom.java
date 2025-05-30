@@ -1,16 +1,16 @@
 package AST;
 
 public class ImportFrom {
-    String From ;
+//    String From ;
     String StringLiteral ;
 
-    public String getFrom() {
-        return From;
-    }
-
-    public void setFrom(String from) {
-        From = from;
-    }
+//    public String getFrom() {
+//        return From;
+//    }
+//
+//    public void setFrom(String from) {
+//        From = from;
+//    }
 
     public String getStringLiteral() {
         return StringLiteral;
@@ -23,8 +23,8 @@ public class ImportFrom {
     @Override
     public String toString() {
         return "ImportFrom\n" +'{'+
-                "'" + From + "'\n" +
-                ",StringLiteral='" + StringLiteral + '\n' +
+//                "'" + From + "'\n" +
+                "StringLiteral='" + StringLiteral + '\n' +
                 '}';
     }
 }

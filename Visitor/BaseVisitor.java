@@ -1,18 +1,50 @@
 package Visitor;
 
 import AST.*;
+
+import SymbolTable.SymbolTable;
+import app.Main;
 import gen.ParserFile;
 import gen.ParserFileBaseVisitor;
+import SymbolTable.Row;
+import SemanticCheck.SemanticCheck;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class BaseVisitor extends ParserFileBaseVisitor {
 
+    SymbolTable symbolTable = Main.st;
+
     @Override
     public Program visitProgram(ParserFile.ProgramContext ctx) {
+        this.symbolTable.addoutside();
         Program program = new Program();
         if (ctx.sourceElements() != null) {
             program.setSourceElements(visitSourceElements(ctx.sourceElements()));
         }
+
+//        System.out.println("SymbolTable");
+//        System.out.println("..........................................................");
+//
+//        this.symbolTable.printSymbolTable();
+//        System.out.println("===========================================================");
+
+
+        SemanticCheck semanticCheck = new SemanticCheck();
+        //  semanticCheck.setSymbolTable(this.symbolTable);
+        semanticCheck.Check_PropertyMatching(this.symbolTable);
+        semanticCheck.Check_ifDuplicate_class(this.symbolTable);
+        semanticCheck.Check_TemplateProperty(this.symbolTable);
+        semanticCheck.Check_ConflictingTemplateProperties(this.symbolTable);
+//        semanticCheck.Check_ComponentImport(this.symbolTable);
+        semanticCheck.Check_DecoratorImports(this.symbolTable);
+        semanticCheck.Check_InputOutputConflict(this.symbolTable);
+        semanticCheck.printErrorsWithContext();
+
+//        semanticCheck.printErrors();
+
         return program;
     }
 
@@ -41,6 +73,20 @@ public class BaseVisitor extends ParserFileBaseVisitor {
     @Override
     public HtmlAttribute visitHtmlAttribute(ParserFile.HtmlAttributeContext ctx) {
         HtmlAttribute htmlAttribute = new HtmlAttribute();
+        if (ctx.AngularDirective() != null) {
+            htmlAttribute.setAngularDirective(ctx.AngularDirective().getText());
+        }
+        if (ctx.propertyName() != null) {
+            htmlAttribute.setPropertyName(visitPropertyName(ctx.propertyName()));
+            int scopeId = this.symbolTable.getCurrentScopeID();
+            Row s1 = new Row();
+            s1.setDatatype("Template Property");
+            s1.setKey(ctx.propertyName().getText());
+            s1.setLineNumber(ctx.propertyName().getStart().getLine());
+            s1.setScope(this.symbolTable.getScopeByID(scopeId));
+            this.symbolTable.getScopeByID(scopeId).setRows(s1);
+
+        }
         if (ctx.htmlAttributeName() != null) {
             htmlAttribute.setHtmlAttributeName(visitHtmlAttributeName(ctx.htmlAttributeName()));
         }
@@ -84,9 +130,9 @@ public class BaseVisitor extends ParserFileBaseVisitor {
                 htmlContent.getHtmlElement().add(visitHtmlElement(ctx.htmlElement(i)));
             }
         }
-        for (int i = 0; i < ctx.objectExpressionSequence().size(); i++) {
-            if (ctx.objectExpressionSequence() != null) {
-                htmlContent.getObjectExpressionSequences().add(visitObjectExpressionSequence(ctx.objectExpressionSequence(i)));
+        for (int i = 0; i < ctx.interpolationExpression().size(); i++) {
+            if (ctx.interpolationExpression() != null) {
+                htmlContent.getInterpolationExpressions().add(visitInterpolationExpression(ctx.interpolationExpression(i)));
             }
         }
         return htmlContent;
@@ -102,6 +148,34 @@ public class BaseVisitor extends ParserFileBaseVisitor {
     }
 
     @Override
+    public HtmlSequence visitHtmlSequence(ParserFile.HtmlSequenceContext ctx) {
+        HtmlSequence htmlSequence = new HtmlSequence();
+        if (ctx.propertyName() != null) {
+            htmlSequence.setPropertyName(visitPropertyName(ctx.propertyName()));
+        }
+        if (ctx.identifierName() != null) {
+            htmlSequence.setIdentifierName(visitIdentifierName(ctx.identifierName()));
+        }
+        return htmlSequence;
+
+    }
+
+    @Override
+    public InterpolationExpression visitInterpolationExpression(ParserFile.InterpolationExpressionContext ctx) {
+        InterpolationExpression interpolationExpression = new InterpolationExpression();
+        if (ctx.htmlSequence() != null) {
+            interpolationExpression.setHtmlSequence(visitHtmlSequence(ctx.htmlSequence()));
+        }
+        if (ctx.DOUBLE_L_CURLY() != null) {
+            interpolationExpression.setDOUBLE_L_CURLY(ctx.DOUBLE_L_CURLY().getText());
+        }
+        if (ctx.DOUBLE_R_CURLY() != null) {
+            interpolationExpression.setDOUBLE_R_CURLY(ctx.DOUBLE_R_CURLY().getText());
+        }
+        return interpolationExpression;
+    }
+
+    @Override
     public HtmlAttributeValue visitHtmlAttributeValue(ParserFile.HtmlAttributeValueContext ctx) {
         HtmlAttributeValue htmlAttributeValue = new HtmlAttributeValue();
         if (ctx.AttributeValue() != null) {
@@ -109,9 +183,13 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         if (ctx.StringLiteral() != null) {
             htmlAttributeValue.setStringLiteral(ctx.StringLiteral().getText());
+
         }
         if (ctx.objectExpressionSequence() != null) {
             htmlAttributeValue.setObjectExpressionSequence(visitObjectExpressionSequence(ctx.objectExpressionSequence()));
+        }
+        if (ctx.interpolationExpression() != null) {
+            htmlAttributeValue.setInterpolationExpression(visitInterpolationExpression(ctx.interpolationExpression()));
         }
         return htmlAttributeValue;
     }
@@ -268,8 +346,24 @@ public class BaseVisitor extends ParserFileBaseVisitor {
 
         }
         if (ctx.identifier() != null) {
-            classDeclaration.setIdentifier(visitIdentifier(ctx.identifier()));
-            String className = ctx.identifier().getText();
+            Identifier identifier = visitIdentifier(ctx.identifier());
+            classDeclaration.setIdentifier(identifier);
+            int scopeId = this.symbolTable.getCurrentScopeID();
+            Row s1 = new Row();
+            s1.setDatatype("Class");
+            s1.setKey(ctx.identifier().getText());
+            s1.setLineNumber(ctx.identifier().getStart().getLine());
+            s1.setScope(this.symbolTable.getScopeByID(scopeId));
+
+
+            this.symbolTable.getScopeByID(scopeId).setRows(s1);
+
+//            symbolTable.createScope(ctx.identifier().getText());
+
+
+        }
+
+
 //            Scope classScope = new Scope(className, currentScope);
 //            currentScope = classScope;
 //            symbolTable.addSymbol(className, "Class", "", ctx.identifier().getStart().getLine(), classScope.getId());
@@ -279,7 +373,7 @@ public class BaseVisitor extends ParserFileBaseVisitor {
 //            row.setValue("Symbol :  " + ctx.identifier().getText());
 //            row.setLineNumber(ctx.identifier().getStart().getLine());
 //            symbolTable.getRows().add(row);
-        }
+
         if (ctx.typeParameters() != null) {
             classDeclaration.setTypeParameters(visitTypeParameters(ctx.typeParameters()));
         }
@@ -290,6 +384,100 @@ public class BaseVisitor extends ParserFileBaseVisitor {
             classDeclaration.setClassTail(visitClassTail(ctx.classTail()));
         }
         return classDeclaration;
+    }
+
+    @Override
+    public WhileStatement visitWhileStatement(ParserFile.WhileStatementContext ctx) {
+        WhileStatement whileStatement = new WhileStatement();
+        whileStatement.setStatement(visitStatement(ctx.statement()));
+        whileStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+        return whileStatement;
+    }
+
+    @Override
+    public ForStatement visitForStatement(ParserFile.ForStatementContext ctx) {
+        ForStatement forStatement = new ForStatement();
+
+        forStatement.setStatement(visitStatement(ctx.statement()));
+        for (int i = 0; i < ctx.expressionSequence().size(); i++) {
+            if (ctx.expressionSequence() != null) {
+//            forStatement.getExpressionSequence().add(visitExpressionSequence(ctx.expressionSequence(i)));
+                forStatement.getExpressionSequence().add(visitExpressionSequence(ctx.expressionSequence(i)));
+
+            }
+        }
+        return forStatement;
+
+    }
+
+    @Override
+    public ForVarStatement visitForVarStatement(ParserFile.ForVarStatementContext ctx) {
+        ForVarStatement forVarStatement = new ForVarStatement();
+        forVarStatement.setStatement(visitStatement(ctx.statement()));
+        for (int i = 0; i < ctx.expressionSequence().size(); i++) {
+            if (ctx.expressionSequence() != null) {
+//            forStatement.getExpressionSequence().add(visitExpressionSequence(ctx.expressionSequence(i)));
+                forVarStatement.getExpressionSequence().add(visitExpressionSequence(ctx.expressionSequence(i)));
+            }
+        }
+        forVarStatement.setVarModifier(visitVarModifier(ctx.varModifier()));
+        forVarStatement.setVariableDeclarationList(visitVariableDeclarationList(ctx.variableDeclarationList()));
+        return forVarStatement;
+
+    }
+
+    @Override
+    public ForInStatement visitForInStatement(ParserFile.ForInStatementContext ctx) {
+        ForInStatement forInStatement = new ForInStatement();
+        forInStatement.setSingleExpression(visitSingleExpression(ctx.singleExpression()));
+        forInStatement.setStatement(visitStatement(ctx.statement()));
+        forInStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+        return forInStatement;
+
+    }
+
+    @Override
+    public ForVarInStatement visitForVarInStatement(ParserFile.ForVarInStatementContext ctx) {
+        ForVarInStatement forVarInStatement = new ForVarInStatement();
+        forVarInStatement.setVarModifier(visitVarModifier(ctx.varModifier()));
+        forVarInStatement.setVariableDeclaration(visitVariableDeclaration(ctx.variableDeclaration()));
+        forVarInStatement.setStatement(visitStatement(ctx.statement()));
+        forVarInStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+        return  forVarInStatement;
+    }
+
+
+    @Override
+    public ForOfStatement visitForOfStatement(ParserFile.ForOfStatementContext ctx) {
+        ForOfStatement forOfStatement = new ForOfStatement();
+        forOfStatement.setSingleExpression(visitSingleExpression(ctx.singleExpression()));
+        forOfStatement.setIdentifier(visitIdentifier(ctx.identifier()));
+        forOfStatement.setType(visitType_(ctx.type_()));
+        forOfStatement.setStatement(visitStatement(ctx.statement()));
+        forOfStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+        return forOfStatement;
+    }
+
+    @Override
+    public ForVarOfStatement visitForVarOfStatement(ParserFile.ForVarOfStatementContext ctx) {
+        ForVarOfStatement forVarOfStatement = new ForVarOfStatement();
+        forVarOfStatement.setStatement(visitStatement(ctx.statement()));
+        forVarOfStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+        forVarOfStatement.setIdentifier(visitIdentifier(ctx.identifier()));
+        forVarOfStatement.setType(visitType_(ctx.type_()));
+        forVarOfStatement.setVarModifier(visitVarModifier(ctx.varModifier()));
+        forVarOfStatement.setVariableDeclaration(visitVariableDeclaration(ctx.variableDeclaration()));
+        return forVarOfStatement;
+
+    }
+
+    @Override
+    public DoStatement visitDoStatement(ParserFile.DoStatementContext ctx) {
+        DoStatement doStatement = new DoStatement();
+        doStatement.setStatement(visitStatement(ctx.statement()));
+        doStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+        return doStatement;
+
     }
 
     @Override
@@ -336,6 +524,14 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         VariableDeclarationList variableDeclarationList = new VariableDeclarationList();
         for (int i = 0; i < ctx.variableDeclaration().size(); i++) {
             if (ctx.variableDeclaration() != null) {
+//                int scopeId = this.symbolTable.getCurrentScopeID();
+//                Row s1 = new Row();
+//                s1.setDatatype("Alias");
+//                s1.setKey(ctx.variableDeclaration(i).singleExpression(i).getText());
+//                s1.setLineNumber(ctx.variableDeclaration(i).singleExpression(i).getStart().getLine());
+//                s1.setScope(this.symbolTable.getScopeByID(scopeId));
+//                this.symbolTable.getScopeByID(scopeId).setRows(s1);
+
                 variableDeclarationList.getVariableDeclaration().add(visitVariableDeclaration(ctx.variableDeclaration(i)));
             }
         }
@@ -415,6 +611,8 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         if (ctx.variableDeclarationList() != null) {
             variableStatement.setVariableDeclarationList(visitVariableDeclarationList(ctx.variableDeclarationList()));
+
+
         }
         if (ctx.Declare() != null) {
             variableStatement.setDeclare(ctx.Declare().getText());
@@ -428,11 +626,12 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         if (ctx.expressionSequence() != null) {
             expressionStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
         }
-        if (ctx.SemiColon() != null) {
-            expressionStatement.setSemiColon(ctx.SemiColon().getText());
-        }
+//        if (ctx.SemiColon() != null) {
+//            expressionStatement.setSemiColon(ctx.SemiColon().getText());
+//        }
         return expressionStatement;
     }
+
 
     @Override
     public ExpressionSequence visitExpressionSequence(ParserFile.ExpressionSequenceContext ctx) {
@@ -445,77 +644,185 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         return expressionSequence;
     }
 
+
     //TODO
+//    @Override
+//    public SingleExpression visitSingleExpression(ParserFile.SingleExpressionContext ctx) {
+//        SingleExpression singleExpression = new SingleExpression();
+//        for (int i = 0; i < ctx.singleExpression().size(); i++) {
+//            if (ctx.singleExpression() != null) {
+//                singleExpression.setSingleExpression(visitSingleExpression(ctx.singleExpression(i)));
+//            }
+//        }
+////        if (ctx.anonymousFunction() != null) {
+////            singleExpression.setAnonymousFunction(visitAnonymousFunction(ctx.anonymousFunction()));
+////        }
+//        if (ctx.Class() != null) {
+//            singleExpression.setClasse(ctx.Class().getText());
+//        }
+//        if (ctx.identifier() != null) {
+//            singleExpression.setIdentifier(visitIdentifier(ctx.identifier()));
+//        }
+//        if (ctx.identifierName() != null) {
+//            singleExpression.setIdentifierName(visitIdentifierName(ctx.identifierName()));
+//        }
+//        if (ctx.typeGeneric() != null) {
+//            singleExpression.setTypeGeneric(visitTypeGeneric(ctx.typeGeneric()));
+//        }
+//        if (ctx.typeParameters() != null) {
+//            singleExpression.setTypeParameters(visitTypeParameters(ctx.typeParameters()));
+//        }
+////        if (ctx.classHeritage() != null) {
+////            singleExpression.setClassHeritage(visitClassHeritage(ctx.classHeritage()));
+////        }
+//        if (ctx.classTail() != null) {
+//            singleExpression.setClassTail(visitClassTail(ctx.classTail()));
+//        }
+//        if (ctx.expressionSequence() != null) {
+//            singleExpression.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
+//        }
+//        if (ctx.typeArguments() != null) {
+//            singleExpression.setTypeArguments(visitTypeArguments(ctx.typeArguments()));
+//        }
+//        if (ctx.This() != null) {
+//            singleExpression.setThis(ctx.This().getText());
+//        }
+//        if (ctx.identifierName() != null) {
+//            singleExpression.setIdentifierName(visitIdentifierName(ctx.identifierName()));
+//        }
+//        if (ctx.literal() != null) {
+//            singleExpression.setLiteral(visitLiteral(ctx.literal()));
+//        }
+//        if (ctx.objectLiteral() != null) {
+//            singleExpression.setObjectLiteral(visitObjectLiteral(ctx.objectLiteral()));
+////            Row row = new Row();
+////            row.setType("Value: =====>") ;
+////            row.setValue("Symbol :  " + ctx.objectLiteral().getText());
+////            row.setLineNumber(ctx.objectLiteral().getStart().getLine());
+////            symbolTable.getRows().add(row);
+//        }
+//        if (ctx.arrayLiteral() != null) {
+//            singleExpression.setArrayLiteral(visitArrayLiteral(ctx.arrayLiteral()));
+////            Row row = new Row();
+////            row.setType("Symbol Type: Array =====>");
+////            row.setValue("Value :  " + ctx.arrayLiteral().getText());
+////            row.setLineNumber(ctx.arrayLiteral().getStart().getLine());
+////            symbolTable.getRows().add(row);
+//        }
+//        if (ctx.htmlElement() != null) {
+//            singleExpression.setHtmlElement(visitHtmlElement(ctx.htmlElement()));
+//        }
+//        if (ctx.arguments() != null) {
+//            singleExpression.setArguments(visitArguments(ctx.arguments()));
+//        }
+//
+//
+//        return singleExpression;
+//    }
     @Override
     public SingleExpression visitSingleExpression(ParserFile.SingleExpressionContext ctx) {
         SingleExpression singleExpression = new SingleExpression();
-        for (int i = 0; i < ctx.singleExpression().size(); i++) {
-            if (ctx.singleExpression() != null) {
-                singleExpression.setSingleExpression(visitSingleExpression(ctx.singleExpression(i)));
-            }
+
+        // Recursive child expressions
+        if (!ctx.singleExpression().isEmpty()) {
+            singleExpression.setSingleExpression(visitSingleExpression(ctx.singleExpression(0)));
         }
-//        if (ctx.anonymousFunction() != null) {
-//            singleExpression.setAnonymousFunction(visitAnonymousFunction(ctx.anonymousFunction()));
-//        }
+
+        // Handle 'class' declarations
         if (ctx.Class() != null) {
             singleExpression.setClasse(ctx.Class().getText());
+            if (ctx.identifier() != null) {
+                singleExpression.setIdentifier(visitIdentifier(ctx.identifier()));
+            }
+            if (ctx.typeParameters() != null) {
+                singleExpression.setTypeParameters(visitTypeParameters(ctx.typeParameters()));
+            }
+            if (ctx.classHeritage() != null) {
+                singleExpression.setClassHeritage(visitClassHeritage(ctx.classHeritage()));
+            }
+            if (ctx.classTail() != null) {
+                singleExpression.setClassTail(visitClassTail(ctx.classTail()));
+            }
         }
-        if (ctx.identifier() != null) {
-            singleExpression.setIdentifier(visitIdentifier(ctx.identifier()));
-        }
-        if (ctx.identifierName() != null) {
-            singleExpression.setIdentifierName(visitIdentifierName(ctx.identifierName()));
-        }
-        if (ctx.typeGeneric() != null) {
-            singleExpression.setTypeGeneric(visitTypeGeneric(ctx.typeGeneric()));
-        }
-        if (ctx.typeParameters() != null) {
-            singleExpression.setTypeParameters(visitTypeParameters(ctx.typeParameters()));
-        }
-//        if (ctx.classHeritage() != null) {
-//            singleExpression.setClassHeritage(visitClassHeritage(ctx.classHeritage()));
-//        }
-        if (ctx.classTail() != null) {
-            singleExpression.setClassTail(visitClassTail(ctx.classTail()));
-        }
+
+
         if (ctx.expressionSequence() != null) {
             singleExpression.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
         }
-        if (ctx.typeArguments() != null) {
-            singleExpression.setTypeArguments(visitTypeArguments(ctx.typeArguments()));
-        }
-        if (ctx.This() != null) {
-            singleExpression.setThis(ctx.This().getText());
-        }
+
         if (ctx.identifierName() != null) {
             singleExpression.setIdentifierName(visitIdentifierName(ctx.identifierName()));
         }
-        if (ctx.literal() != null) {
-            singleExpression.setLiteral(visitLiteral(ctx.literal()));
+
+        if (ctx.typeGeneric() != null) {
+            singleExpression.setTypeGeneric(visitTypeGeneric(ctx.typeGeneric()));
         }
-        if (ctx.objectLiteral() != null) {
-            singleExpression.setObjectLiteral(visitObjectLiteral(ctx.objectLiteral()));
-//            Row row = new Row();
-//            row.setType("Value: =====>") ;
-//            row.setValue("Symbol :  " + ctx.objectLiteral().getText());
-//            row.setLineNumber(ctx.objectLiteral().getStart().getLine());
-//            symbolTable.getRows().add(row);
-        }
-        if (ctx.arrayLiteral() != null) {
-            singleExpression.setArrayLiteral(visitArrayLiteral(ctx.arrayLiteral()));
-//            Row row = new Row();
-//            row.setType("Symbol Type: Array =====>");
-//            row.setValue("Value :  " + ctx.arrayLiteral().getText());
-//            row.setLineNumber(ctx.arrayLiteral().getStart().getLine());
-//            symbolTable.getRows().add(row);
-        }
-        if (ctx.htmlElement() != null) {
-            singleExpression.setHtmlElement(visitHtmlElement(ctx.htmlElement()));
-        }
+
         if (ctx.arguments() != null) {
             singleExpression.setArguments(visitArguments(ctx.arguments()));
         }
 
+        if (ctx.typeArguments() != null) {
+            singleExpression.setTypeArguments(visitTypeArguments(ctx.typeArguments()));
+        }
+
+        if (ctx.New() != null) {
+            singleExpression.setNew(ctx.New().getText());
+        }
+
+        if (ctx.Delete() != null) {
+            singleExpression.setDelete(ctx.Delete().getText());
+        }
+
+        if (ctx.Void() != null) {
+            singleExpression.setVoid(ctx.Void().getText());
+        }
+
+        if (ctx.Typeof() != null) {
+            singleExpression.setTypeOf(ctx.Typeof().getText());
+        }
+
+        if (ctx.Await() != null) {
+            singleExpression.setAwait(ctx.Await().getText());
+        }
+
+        if (ctx.Instanceof() != null) {
+            singleExpression.setInstanceOf(ctx.Instanceof().getText());
+        }
+
+        if (ctx.In() != null) {
+            singleExpression.setIn(ctx.In().getText());
+        }
+
+
+        if (ctx.This() != null) {
+            singleExpression.setThis(ctx.This().getText());
+        }
+
+        if (ctx.Super() != null) {
+            singleExpression.setSuper(ctx.Super().getText());
+        }
+
+        if (ctx.literal() != null) {
+            singleExpression.setLiteral(visitLiteral(ctx.literal()));
+        }
+
+        if (ctx.arrayLiteral() != null) {
+            singleExpression.setArrayLiteral(visitArrayLiteral(ctx.arrayLiteral()));
+        }
+
+        if (ctx.objectLiteral() != null) {
+            singleExpression.setObjectLiteral(visitObjectLiteral(ctx.objectLiteral()));
+        }
+
+
+        if (ctx.As() != null) {
+            singleExpression.setAs(ctx.As().getText());
+        }
+
+        if (ctx.htmlElement() != null) {
+            singleExpression.setHtmlElement(visitHtmlElement(ctx.htmlElement()));
+        }
 
         return singleExpression;
     }
@@ -1044,7 +1351,6 @@ public class BaseVisitor extends ParserFileBaseVisitor {
             arrayLiteral.setElementList(visitElementList(ctx.elementList()));
         }
         return arrayLiteral;
-
     }
 
     @Override
@@ -1052,6 +1358,13 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         ObjectLiteral objectLiteral = new ObjectLiteral();
         for (int i = 0; i < ctx.propertyAssignment().size(); i++) {
             if (ctx.propertyAssignment() != null) {
+                int scopeId = this.symbolTable.getCurrentScopeID();
+                Row s1 = new Row();
+                s1.setDatatype("Component Property");
+                s1.setKey(ctx.propertyAssignment(i).propertyName().identifierName().identifier().getText());
+                s1.setLineNumber(ctx.propertyAssignment(i).propertyName().identifierName().identifier().getStart().getLine());
+                s1.setScope(this.symbolTable.getScopeByID(scopeId));
+                this.symbolTable.getScopeByID(scopeId).setRows(s1);
                 objectLiteral.getPropertyAssignment().add(visitPropertyAssignment(ctx.propertyAssignment(i)));
             }
         }
@@ -1082,9 +1395,9 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         if (ctx.typeAnnotation() != null) {
             propertyMemberDeclaration.setTypeAnnotation(visitTypeAnnotation(ctx.typeAnnotation()));
         }
-        if (ctx.SemiColon() != null) {
-            propertyMemberDeclaration.setSemiColon(ctx.SemiColon().getText());
-        }
+//        if (ctx.SemiColon() != null) {
+//            propertyMemberDeclaration.setSemiColon(ctx.SemiColon().getText());
+//        }
         if (ctx.callSignature() != null) {
             propertyMemberDeclaration.setCallSignature(visitCallSignature(ctx.callSignature()));
         }
@@ -1094,13 +1407,30 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         if (ctx.abstractDeclaration() != null) {
             propertyMemberDeclaration.setAbstractDeclaration(visitAbstractDeclaration(ctx.abstractDeclaration()));
         }
+
+
         return propertyMemberDeclaration;
     }
+
 
     @Override
     public FunctionBody visitFunctionBody(ParserFile.FunctionBodyContext ctx) {
         FunctionBody functionBody = new FunctionBody();
         if (ctx.sourceElements() != null) {
+            int scopeId = this.symbolTable.getCurrentScopeID();
+//            Row s1 = new Row();
+//            s1.setDatatype("Decorator");
+//            s1.setKey(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getText());
+//            s1.setLineNumber(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getStart().getLine());
+//            s1.setScope(this.symbolTable.getScopeByID(scopeId));
+//
+//
+//            this.symbolTable.getScopeByID(scopeId).setRows(s1);
+//
+//            symbolTable.createScope(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getText());
+//
+//            s1.setDatatype("Decorator");
+
             functionBody.setSourceElements(visitSourceElements(ctx.sourceElements()));
         }
         return functionBody;
@@ -1223,7 +1553,22 @@ public class BaseVisitor extends ParserFileBaseVisitor {
             decorator.setDecoratorMemberExpression(visitDecoratorMemberExpression(ctx.decoratorMemberExpression()));
         }
         if (ctx.decoratorCallExpression() != null) {
+            int scopeId = this.symbolTable.getCurrentScopeID();
+            Row s1 = new Row();
+            s1.setDatatype("Decorator");
+            s1.setKey(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getText());
+            s1.setLineNumber(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getStart().getLine());
+            s1.setScope(this.symbolTable.getScopeByID(scopeId));
+
+
+            this.symbolTable.getScopeByID(scopeId).setRows(s1);
+
+            symbolTable.createScope(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getText());
+
+            s1.setDatatype("Decorator");
+
             decorator.setDecoratorCallExpression(visitDecoratorCallExpression(ctx.decoratorCallExpression()));
+
 //            Row row = new Row();
 //            row.setType("Symbol Type: Decorator =====>");
 //            row.setValue("Symbol :  " + ctx.decoratorCallExpression().getText());
@@ -1302,6 +1647,23 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         for (int i = 0; i < ctx.classElement().size(); i++) {
             if (ctx.classElement() != null) {
                 classTail.getclassElement().add(visitClassElement(ctx.classElement(i)));
+                if (ctx.classElement(i).propertyMemberDeclaration() != null) {
+                    int scopeId = this.symbolTable.getCurrentScopeID();
+                    Row s1 = new Row();
+                    s1.setDatatype("Class Property");
+                    s1.setKey(ctx.classElement(i).propertyMemberDeclaration().propertyName().identifierName().identifier().getText());
+
+                    s1.setLineNumber(ctx.classElement(i).propertyMemberDeclaration().propertyName().identifierName().identifier().getStart().getLine());
+                    s1.setScope(this.symbolTable.getScopeByID(scopeId));
+                    if (ctx.classElement(i).propertyMemberDeclaration().typeAnnotation() != null) {
+                        List<String> valuesList = new ArrayList<>();
+                        valuesList.add(ctx.classElement(i).propertyMemberDeclaration().typeAnnotation().type_().getText());
+                        s1.setValue(valuesList);
+
+                    }
+                    this.symbolTable.getScopeByID(scopeId).setRows(s1);
+
+                }
             }
         }
         return classTail;
@@ -1391,11 +1753,10 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         if (ctx.functionDeclaration() != null) {
             statement.setFunctionDeclaration(visitFunctionDeclaration(ctx.functionDeclaration()));
-//            Row row = new Row();
-//            row.setType("Symbol Type: Function =====>");
-//            row.setValue("Value :   " + ctx.functionDeclaration().getText());
-//            row.setLineNumber(ctx.functionDeclaration().getStart().getLine());
-//            symbolTable.getRows().add(row);
+
+        }
+        if (ctx.iterationStatement() != null) {
+            statement.setIterationStatement((IterationStatement) visit(ctx.iterationStatement()));
         }
         return statement;
     }
@@ -1467,18 +1828,18 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         if (ctx.importFrom() != null) {
             importFromBlock.setImportFrom(visitImportFrom(ctx.importFrom()));
         }
-        if (ctx.eos() != null) {
-            importFromBlock.setEos(visitEos(ctx.eos()));
-        }
+//        if (ctx.eos() != null) {
+//            importFromBlock.setEos(visitEos(ctx.eos()));
+//        }
         return importFromBlock;
     }
 
     @Override
     public ImportFrom visitImportFrom(ParserFile.ImportFromContext ctx) {
         ImportFrom importFrom = new ImportFrom();
-        if (ctx.From() != null) {
-            importFrom.setFrom(ctx.From().getText());
-        }
+//        if (ctx.From() != null) {
+//            importFrom.setFrom(ctx.From().getText());
+//        }
         if (ctx.StringLiteral() != null) {
             importFrom.setStringLiteral(ctx.StringLiteral().getText());
         }
@@ -1516,11 +1877,13 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         ImportAliasName importAliasName = new ImportAliasName();
         if (ctx.moduleExportName() != null) {
             importAliasName.setModuleExportName(visitModuleExportName(ctx.moduleExportName()));
-//            Row row = new Row();
-//            row.setType("Symbol Type: Import =====>");
-//            row.setValue("Symbol :   " + ctx.moduleExportName().getText());
-//            row.setLineNumber(ctx.moduleExportName().getStart().getLine());
-//            symbolTable.getRows().add(row);
+            int scopeId = this.symbolTable.getCurrentScopeID();
+            Row s1 = new Row();
+            s1.setDatatype("Alias Import");
+            s1.setKey(ctx.moduleExportName().identifierName().identifier().getText());
+            s1.setLineNumber(ctx.moduleExportName().identifierName().identifier().getStart().getLine());
+            s1.setScope(this.symbolTable.getScopeByID(scopeId));
+            this.symbolTable.getScopeByID(scopeId).setRows(s1);
         }
         if (ctx.importedBinding() != null) {
             importAliasName.setImportedBinding(visitImportedBinding(ctx.importedBinding()));
@@ -1842,7 +2205,6 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         return eos;
     }
-
 
 
 }

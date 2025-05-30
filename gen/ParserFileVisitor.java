@@ -535,6 +535,18 @@ public interface ParserFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitHtmlAttributeValue(ParserFile.HtmlAttributeValueContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link ParserFile#interpolationExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInterpolationExpression(ParserFile.InterpolationExpressionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ParserFile#htmlSequence}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitHtmlSequence(ParserFile.HtmlSequenceContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link ParserFile#asExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

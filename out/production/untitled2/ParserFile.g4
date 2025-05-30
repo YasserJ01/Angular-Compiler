@@ -408,6 +408,8 @@ expressionSequence
     : singleExpression (',' singleExpression)*
     ;
 
+
+
 singleExpression
     : Class identifier? typeParameters? classHeritage classTail
     //Optional Chaining
@@ -476,9 +478,17 @@ htmlElement
     | '<' htmlTagName htmlAttribute* '/' '>'
     | '<' htmlTagName htmlAttribute* '>'
     ;
+//htmlContent
+//    :  htmlContentPart* (~('<' | '{')+)*
+//    ;
+//
+//htmlContentPart
+//    : htmlElement
+//    | interpolationExpression
+//    ;
 
 htmlContent
-    : (~('<' | '{')+)? ((htmlElement | objectExpressionSequence)  (~('<' | '{')+)?)*
+    : ((htmlElement | interpolationExpression)  (~('<' | '{')+)?)*
     ;
 
 objectExpressionSequence
@@ -501,6 +511,7 @@ htmlTagName
 
 htmlAttribute
     : '*'? (htmlAttributeName | Class) ('=' htmlAttributeValue)?
+    | AngularDirective '=' propertyName
     ;
 
 htmlAttributeName
@@ -514,7 +525,16 @@ htmlAttributeName
 htmlAttributeValue
     : AttributeValue
     | StringLiteral
+    | interpolationExpression
     | objectExpressionSequence
+    ;
+
+interpolationExpression
+    :  DOUBLE_L_CURLY htmlSequence DOUBLE_R_CURLY
+    ;
+
+htmlSequence
+    : propertyName '.' identifierName
     ;
 
 asExpression

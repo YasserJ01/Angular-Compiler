@@ -884,6 +884,26 @@ public interface ParserFileListener extends ParseTreeListener {
 	 */
 	void exitHtmlAttributeValue(ParserFile.HtmlAttributeValueContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ParserFile#interpolationExpression}.
+	 * @param ctx the parse tree
+	 */
+	void enterInterpolationExpression(ParserFile.InterpolationExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ParserFile#interpolationExpression}.
+	 * @param ctx the parse tree
+	 */
+	void exitInterpolationExpression(ParserFile.InterpolationExpressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ParserFile#htmlSequence}.
+	 * @param ctx the parse tree
+	 */
+	void enterHtmlSequence(ParserFile.HtmlSequenceContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ParserFile#htmlSequence}.
+	 * @param ctx the parse tree
+	 */
+	void exitHtmlSequence(ParserFile.HtmlSequenceContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ParserFile#asExpression}.
 	 * @param ctx the parse tree
 	 */

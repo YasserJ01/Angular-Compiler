@@ -2,7 +2,7 @@ package AST;
 
 public class ExpressionStatement {
     ExpressionSequence expressionSequence;
-    String SemiColon;
+//    String SemiColon;
 
     public ExpressionSequence getExpressionSequence() {
         return expressionSequence;
@@ -12,25 +12,20 @@ public class ExpressionStatement {
         this.expressionSequence = expressionSequence;
     }
 
-    public String getSemiColon() {
-        return SemiColon;
-    }
+//    public String getSemColon() {
+//        return SemiColon;
+//    }
 
-    public void setSemiColon(String semiColon) {
-        SemiColon = semiColon;
-    }
+//    public void setSemiColon(String semiColon) {
+//        SemiColon = semiColon;
+//    }
 
     @Override
     public String toString() {
-        if (SemiColon!=null) {
-            return "ExpressionStatement{" +'\n'+
-                    expressionSequence + '\n' +
-                    ",SemiColon=" + SemiColon + '\n' +
-
-                    '}';
-        }
-        return "ExpressionStatement{" +'\n'+
+        return "ExpressionStatement{" + '\n' +
                 expressionSequence + '\n' +
+//                    ",SemiColon=" + SemiColon + '\n' +
+
                 '}';
     }
 }
