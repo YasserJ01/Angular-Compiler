@@ -1,0 +1,19 @@
+<div class="app-shell" style="display:flex;flex-direction:column;height:100vh">
+  <header style="padding:10px;border-bottom:1px solid #ddd;background:#fafafa">
+    <h1 style="margin:0">New Products Portal</h1>
+    <nav>
+      <button class="btn" (click)="goTo('list')">Products</button>
+      <button class="btn" (click)="goTo('add')">Add Product</button>
+    </nav>
+  </header>
+  <main style="flex:1;display:flex;gap:12px;padding:12px;overflow:auto">
+    <section style="flex:1;min-width:300px">
+      <app-product-list (selectedProduct)="showDetails($event)"></app-product-list>
+    </section>
+    <section style="flex:1">
+      <app-product-details [product]="currentProduct"></app-product-details>
+    </section>
+  </main>
+</div>
+
+

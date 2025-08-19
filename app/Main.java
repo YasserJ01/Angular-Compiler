@@ -3,6 +3,8 @@ package app;
 import AST.Program;
 import SymbolTable.SymbolTable;
 import Visitor.BaseVisitor;
+import CodeGen.CodeGenerator;
+import CodeGen.AngularToVanilla;
 import gen.LexerFile;
 import gen.ParserFile;
 import org.antlr.v4.runtime.CharStream;
@@ -19,8 +21,8 @@ public class Main {
     public static void main(String[] args) throws IOException {
 //        String source = "DifferentTestsInOne.txt";
 //        String source = "product-list.txt";
-        String source = "product-details.txt";
-//        String source = "app-component.txt";
+//        String source = "product-details.txt";
+        String source = "app-component.txt";
         CharStream cs = fromFileName(source);
         LexerFile lexer = new LexerFile(cs);
         CommonTokenStream token = new CommonTokenStream(lexer);
@@ -30,7 +32,18 @@ public class Main {
         Program doc = (Program) baseVisitor.visit(tree);
 
         System.out.println(doc);
-
-
+        try {
+            // AST-independent demo generator (static)
+//            new CodeGenerator().generate();
+            // AST-driven template translator (dynamic) using existing Angular-like sources
+            new AngularToVanilla().generateFromTemplates(
+                    java.nio.file.Paths.get("new-app.component.html"),
+                    java.nio.file.Paths.get("new-product-list.html"),
+                    java.nio.file.Paths.get("new-product-details.ts")
+            );
+            System.out.println("Code generation complete. Open dist/index.html in a browser.");
+        } catch (Exception e) {
+            System.err.println("Code generation failed: " + e.getMessage());
+        }
     }
 }

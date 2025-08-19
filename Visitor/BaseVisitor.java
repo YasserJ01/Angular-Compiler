@@ -1565,7 +1565,7 @@ public class BaseVisitor extends ParserFileBaseVisitor {
 
             symbolTable.createScope(ctx.decoratorCallExpression().decoratorMemberExpression().identifier().getText());
 
-            s1.setDatatype("Decorator");
+//            s1.setDatatype("Decorator");
 
             decorator.setDecoratorCallExpression(visitDecoratorCallExpression(ctx.decoratorCallExpression()));
 
@@ -2020,6 +2020,43 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         if (ctx.Abstract() != null) {
             identifier.setAbstract(ctx.Abstract().getText());
+        }
+        // Angular-specific identifiers
+        if (ctx.StoreModule() != null) {
+            identifier.setStoreModule(ctx.StoreModule().getText());
+        }
+        if (ctx.EffectsModule() != null) {
+            identifier.setEffectsModule(ctx.EffectsModule().getText());
+        }
+        if (ctx.CreateAction() != null) {
+            identifier.setCreateAction(ctx.CreateAction().getText());
+        }
+        if (ctx.CreateReducer() != null) {
+            identifier.setCreateReducer(ctx.CreateReducer().getText());
+        }
+        if (ctx.CreateSelector() != null) {
+            identifier.setCreateSelector(ctx.CreateSelector().getText());
+        }
+        if (ctx.RouterModule() != null) {
+            identifier.setRouterModule(ctx.RouterModule().getText());
+        }
+        if (ctx.ForRoot() != null) {
+            identifier.setForRoot(ctx.ForRoot().getText());
+        }
+        if (ctx.ForFeature() != null) {
+            identifier.setForFeature(ctx.ForFeature().getText());
+        }
+        if (ctx.Select() != null) {
+            identifier.setSelect(ctx.Select().getText());
+        }
+        if (ctx.Dispatch() != null) {
+            identifier.setDispatch(ctx.Dispatch().getText());
+        }
+        if (ctx.Navigate() != null) {
+            identifier.setNavigate(ctx.Navigate().getText());
+        }
+        if (ctx.NavigateByUrl() != null) {
+            identifier.setNavigateByUrl(ctx.NavigateByUrl().getText());
         }
         return identifier;
     }

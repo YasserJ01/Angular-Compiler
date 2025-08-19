@@ -21,6 +21,19 @@ public class Identifier {
     String constructor;
     String namespace;
     String Abstract;
+    // Angular-specific identifiers
+    String storeModule;
+    String effectsModule;
+    String createAction;
+    String createReducer;
+    String createSelector;
+    String routerModule;
+    String forRoot;
+    String forFeature;
+    String select;
+    String dispatch;
+    String navigate;
+    String navigateByUrl;
 
     public String getIdentifier() {
         return identifier;
@@ -182,6 +195,102 @@ public class Identifier {
         this.Abstract = Abstract;
     }
 
+    public String getStoreModule() {
+        return storeModule;
+    }
+
+    public void setStoreModule(String storeModule) {
+        this.storeModule = storeModule;
+    }
+
+    public String getEffectsModule() {
+        return effectsModule;
+    }
+
+    public void setEffectsModule(String effectsModule) {
+        this.effectsModule = effectsModule;
+    }
+
+    public String getCreateAction() {
+        return createAction;
+    }
+
+    public void setCreateAction(String createAction) {
+        this.createAction = createAction;
+    }
+
+    public String getCreateReducer() {
+        return createReducer;
+    }
+
+    public void setCreateReducer(String createReducer) {
+        this.createReducer = createReducer;
+    }
+
+    public String getCreateSelector() {
+        return createSelector;
+    }
+
+    public void setCreateSelector(String createSelector) {
+        this.createSelector = createSelector;
+    }
+
+    public String getRouterModule() {
+        return routerModule;
+    }
+
+    public void setRouterModule(String routerModule) {
+        this.routerModule = routerModule;
+    }
+
+    public String getForRoot() {
+        return forRoot;
+    }
+
+    public void setForRoot(String forRoot) {
+        this.forRoot = forRoot;
+    }
+
+    public String getForFeature() {
+        return forFeature;
+    }
+
+    public void setForFeature(String forFeature) {
+        this.forFeature = forFeature;
+    }
+
+    public String getSelect() {
+        return select;
+    }
+
+    public void setSelect(String select) {
+        this.select = select;
+    }
+
+    public String getDispatch() {
+        return dispatch;
+    }
+
+    public void setDispatch(String dispatch) {
+        this.dispatch = dispatch;
+    }
+
+    public String getNavigate() {
+        return navigate;
+    }
+
+    public void setNavigate(String navigate) {
+        this.navigate = navigate;
+    }
+
+    public String getNavigateByUrl() {
+        return navigateByUrl;
+    }
+
+    public void setNavigateByUrl(String navigateByUrl) {
+        this.navigateByUrl = navigateByUrl;
+    }
+
     @Override
     public String toString() {
         if (identifier != null) {
@@ -275,6 +384,54 @@ public class Identifier {
                     "namespace='" + namespace + '\n' +
                     '}';
 
+        } else if (storeModule != null) {
+            return "Identifier{" +
+                    "storeModule='" + storeModule + '\n' +
+                    '}';
+        } else if (effectsModule != null) {
+            return "Identifier{" +
+                    "effectsModule='" + effectsModule + '\n' +
+                    '}';
+        } else if (createAction != null) {
+            return "Identifier{" +
+                    "createAction='" + createAction + '\n' +
+                    '}';
+        } else if (createReducer != null) {
+            return "Identifier{" +
+                    "createReducer='" + createReducer + '\n' +
+                    '}';
+        } else if (createSelector != null) {
+            return "Identifier{" +
+                    "createSelector='" + createSelector + '\n' +
+                    '}';
+        } else if (routerModule != null) {
+            return "Identifier{" +
+                    "routerModule='" + routerModule + '\n' +
+                    '}';
+        } else if (forRoot != null) {
+            return "Identifier{" +
+                    "forRoot='" + forRoot + '\n' +
+                    '}';
+        } else if (forFeature != null) {
+            return "Identifier{" +
+                    "forFeature='" + forFeature + '\n' +
+                    '}';
+        } else if (select != null) {
+            return "Identifier{" +
+                    "select='" + select + '\n' +
+                    '}';
+        } else if (dispatch != null) {
+            return "Identifier{" +
+                    "dispatch='" + dispatch + '\n' +
+                    '}';
+        } else if (navigate != null) {
+            return "Identifier{" +
+                    "navigate='" + navigate + '\n' +
+                    '}';
+        } else if (navigateByUrl != null) {
+            return "Identifier{" +
+                    "navigateByUrl='" + navigateByUrl + '\n' +
+                    '}';
         }
         return "Identifier{" +
                 ", Abstract='" + Abstract + '\'' +

@@ -1,0 +1,22 @@
+@Component({
+  selector: 'app-test',
+  template: `
+    <div *ngFor="let product of products" class="product-card">
+      <h3>{{ product.name }}</h3>
+      <img [src]="product.image" alt="{{ product.name }}">
+      <p>{{ product.details }}</p>
+      <button (click)="selectProduct(product)">Select</button>
+    <div *ngIf="selectedProduct">
+      <h2>{{ selectedProduct.name }}</h2>
+      <p>{{ selectedProduct.description }}</p>
+    </div>
+  `
+})
+export class TestComponent {
+  products = [];
+  selectedProduct = null;
+  
+  selectProduct(product) {
+    this.selectedProduct = product;
+  }
+}

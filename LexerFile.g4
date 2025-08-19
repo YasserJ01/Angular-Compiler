@@ -167,6 +167,20 @@ Abstract: 'abstract';
 
 Is: 'is';
 
+// Angular-specific tokens for state management and navigation
+StoreModule     : 'StoreModule';
+EffectsModule   : 'EffectsModule';
+CreateAction    : 'createAction';
+CreateReducer   : 'createReducer';
+CreateSelector  : 'createSelector';
+RouterModule    : 'RouterModule';
+NavigateByUrl   : 'navigateByUrl';
+ForRoot         : 'forRoot';
+ForFeature      : 'forFeature';
+Select          : 'select';
+Dispatch        : 'dispatch';
+Navigate        : 'navigate';
+
 //
 // Ext.2 Additions to 1.8: Decorators
 //

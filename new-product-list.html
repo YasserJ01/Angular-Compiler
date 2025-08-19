@@ -1,0 +1,12 @@
+<div *ngFor="let product of products" class="card" (click)="selectProduct(product)" style="margin:10px;cursor:pointer">
+  <img [src]="product.image" alt="{{ product.name }}" style="width:100%;height:160px;object-fit:cover"/>
+  <div style="padding:8px">
+    <h3>{{ product.name }}</h3>
+    <p *ngIf="product.details">{{ product.details }}</p>
+    <p *ngIf="!product.details">No details provided</p>
+  </div>
+  <button (click)="edit(product); $event.stopPropagation()">Edit</button>
+  <button (click)="remove(product); $event.stopPropagation()">Delete</button>
+</div>
+
+

@@ -404,6 +404,8 @@ argument
     : Ellipsis? (singleExpression | identifier)
     ;
 
+// Intentionally removed helper productions to avoid left recursion.
+
 expressionSequence
     : singleExpression (',' singleExpression)*
     ;
@@ -453,6 +455,7 @@ singleExpression
     | singleExpression '||' singleExpression
     | singleExpression '?' singleExpression ':' singleExpression
     | singleExpression '=' singleExpression
+    | singleExpression '=>' singleExpression
     | singleExpression assignmentOperator singleExpression
     | iteratorBlock
     | This
@@ -612,6 +615,19 @@ identifier
     | Constructor
     | Namespace
     | Abstract
+    // Angular-specific identifiers
+    | StoreModule
+    | EffectsModule
+    | CreateAction
+    | CreateReducer
+    | CreateSelector
+    | RouterModule
+    | Select
+    | Dispatch
+    | Navigate
+    | NavigateByUrl
+    | ForRoot
+    | ForFeature
     ;
 
 identifierOrKeyWord

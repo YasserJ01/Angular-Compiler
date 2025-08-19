@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Products App</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="container">
+    <h1>Products App</h1>
+    <nav>
+      <button class="btn" data-nav="list">Products</button>
+      <button class="btn" data-nav="add">Add Product</button>
+    </nav>
+  </header>
+  <main class="container">
+    <section id="view-list">
+      <div id="listHost"></div>
+    </section>
+    <section id="view-add" style="display:none">
+      <form id="productForm" class="card">
+        <label>Name<input id="name" type="text" required></label>
+        <label>Image URL<input id="image" type="url"></label>
+        <label>Details<textarea id="details"></textarea></label>
+        <div class="actions"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-nav="list">Cancel</button></div>
+      </form>
+    </section>
+    <section id="view-details" style="display:none">
+      <div id="detailsHost" class="card"></div>
+      <div class="actions"><button class="btn" data-nav="list">Back to list</button></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

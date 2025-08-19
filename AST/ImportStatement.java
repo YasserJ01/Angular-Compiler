@@ -24,7 +24,7 @@ public class ImportStatement {
     public String toString() {
         return "ImportStatement{\n" +
                 Import +'\n'+
-                importFromBlock +
+                importFromBlock +'\n'+
                 '}';
     }
 }
