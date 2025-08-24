@@ -1,0 +1,17 @@
+import { Component, Input } from '@angular/core';
+import { Product } from '../app.component';
+
+@Component({
+  selector: 'app-product-details',
+  template: `
+    <div class="product-details" *ngIf="item">
+      <h1>{{item.name}}</h1>
+      <img [src]="item.imgSrc">
+      <p>{{item.price}}</p>
+      <p>{{item.details}}</p>
+    </div>
+  `
+})
+export class ProductDetailsComponent {
+  @Input() item: Product  undefined;
+}

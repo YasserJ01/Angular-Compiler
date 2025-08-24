@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>React App</title>
+<link rel="stylesheet" href="generate.css"/>
+</head>
+<body>
+
+<div id="app"></div>
+
+
+<script>
+class Product {
+    constructor(productId, name, price, imgSrc, details) {
+        this.productId = productId;
+        this.name = name;
+        this.price = price;
+        this.imgSrc = imgSrc;
+        this.details = details;
+    }
+}
+
+function AppComponent() {
+    this.products = [
+        new Product(0, "ProductName1", 200, "../Files/pizza.png", "Product Details 1"),
+        new Product(1, "ProductName2", 400, "../Files/salad.png", "Product Details 2"),
+        new Product(2, "ProductName3", 700, "../Files/sandwich.png", "Product Details 3"),
+        new Product(3, "ProductName4", 500, "../Files/soup.png", "Product Details 4"),
+    ];
+     this.choosenProduct = null; 
+}
+
+AppComponent.choosenProduct = function(productId) { 
+      this.choosenProduct = productId; 
+     this.render(); 
+     ProductDetailsComponent.prototype.render(this.products[this.productId]); 
+}; 
+AppComponent.prototype.render = function() {
+    const container = document.getElementById('app-root'); 
+    container.innerHTML = ''; 
+
+
+</script>
+</body>
+</html>

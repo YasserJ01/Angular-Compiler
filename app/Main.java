@@ -1,6 +1,7 @@
 package app;
 
 import AST.Program;
+import CodeGen.AngularGenerator;
 import SymbolTable.SymbolTable;
 import Visitor.BaseVisitor;
 import CodeGen.CodeGenerator;
@@ -22,7 +23,7 @@ public class Main {
 //        String source = "DifferentTestsInOne.txt";
 //        String source = "product-list.txt";
 //        String source = "product-details.txt";
-        String source = "app-component.txt";
+        String source = "test1.txt";
         CharStream cs = fromFileName(source);
         LexerFile lexer = new LexerFile(cs);
         CommonTokenStream token = new CommonTokenStream(lexer);
@@ -32,18 +33,52 @@ public class Main {
         Program doc = (Program) baseVisitor.visit(tree);
 
         System.out.println(doc);
-        try {
-            // AST-independent demo generator (static)
-//            new CodeGenerator().generate();
-            // AST-driven template translator (dynamic) using existing Angular-like sources
-            new AngularToVanilla().generateFromTemplates(
-                    java.nio.file.Paths.get("new-app.component.html"),
-                    java.nio.file.Paths.get("new-product-list.html"),
-                    java.nio.file.Paths.get("new-product-details.ts")
-            );
-            System.out.println("Code generation complete. Open dist/index.html in a browser.");
-        } catch (Exception e) {
-            System.err.println("Code generation failed: " + e.getMessage());
-        }
+        AngularGenerator generator = new AngularGenerator();
+        generator.generate(doc);
+//        try {
+//            // AST-independent demo generator (static)
+////            new CodeGenerator().generate();
+//            // AST-driven template translator (dynamic) using existing Angular-like sources
+//            new AngularToVanilla().generateFromTemplates(
+//                    java.nio.file.Paths.get("DifferentTestsInOne.txt"),
+//                    java.nio.file.Paths.get("DifferentTestsInOne.txt"),
+//                    java.nio.file.Paths.get("DifferentTestsInOne.txt")
+//            );
+//            System.out.println("Code generation complete. Open dist/index.html in a browser.");
+//        } catch (Exception e) {
+//            System.err.println("Code generation failed: " + e.getMessage());
+//        }
     }
 }
+
+//
+//// --- NgRx state management test ---
+//import { Store, select } from '@ngrx/store';
+//        import { createAction, createReducer, createSelector } from '@ngrx/store';
+//        import { RouterModule, Routes } from '@angular/router';
+//
+//        const loadProducts = createAction('[Products] Load Products');
+//        const setProducts = createAction('[Products] Set Products');
+//
+//        const reducer = createReducer({});
+//
+//        const selectFeature = (state) => state.products;
+//        const selectProducts = createSelector(selectFeature, (f) => f.list);
+//
+//class ProductsComponent {
+//    constructor(private store: Store, private router: Router) {}
+//    ngOnInit() {
+//        this.store.dispatch(loadProducts());
+//        this.store.select(selectProducts);
+//        this.router.navigate(['/home']);
+//        this.router.navigateByUrl('/details');
+//    }
+//}
+//
+//const routes: Routes = [
+//        { path: 'home', component: ProductsComponent },
+//        { path: 'details', component: ProductsComponent }
+//        ];
+//
+//        RouterModule.forRoot(routes);
+

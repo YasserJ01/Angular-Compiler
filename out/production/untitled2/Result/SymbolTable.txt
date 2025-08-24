@@ -1,0 +1,5 @@
+Symbol Table
+ 	global-program    symbols: [{name='products', value='null productId name price imgSrc details productId name price imgSrc details productId name price imgSrc details productId name price imgSrc details' , type='Array'}]{
+ 	 	        App    symbols: [{name='ChoosenProduct', value='null' , type='let'}]{}
+ 	 	 Productdetails    symbols: [{name='props' , type='null'}]{}
+ 	 	 ProductList    symbols: [{name='props' , type='null'}]{}}

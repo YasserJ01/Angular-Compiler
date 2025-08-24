@@ -181,6 +181,48 @@ Select          : 'select';
 Dispatch        : 'dispatch';
 Navigate        : 'navigate';
 
+// Enhanced Angular tokens for state management
+Store           : 'Store';
+Injectable      : 'Injectable';
+Signal          : 'signal';
+Computed        : 'computed';
+Effect          : 'effect';
+WritableSignal  : 'WritableSignal';
+ReadonlySignal  : 'ReadonlySignal';
+BehaviorSubject : 'BehaviorSubject';
+Observable      : 'Observable';
+Subject         : 'Subject';
+
+// Angular Router specific tokens
+Router          : 'Router';
+ActivatedRoute  : 'ActivatedRoute';
+Route           : 'Route';
+Routes          : 'Routes';
+RouterOutlet    : 'router-outlet';
+RouterLink      : 'routerLink';
+RouterLinkActive : 'routerLinkActive';
+
+// Angular state management patterns
+State           : 'state';
+Action          : 'action';
+Reducer         : 'reducer';
+Selector        : 'selector';
+
+// Angular lifecycle hooks (enhanced)
+OnInit          : 'OnInit';
+OnDestroy       : 'OnDestroy';
+OnChanges       : 'OnChanges';
+AfterViewInit   : 'AfterViewInit';
+NgOnInit        : 'ngOnInit';
+NgOnDestroy     : 'ngOnDestroy';
+NgOnChanges     : 'ngOnChanges';
+NgAfterViewInit : 'ngAfterViewInit';
+
+// Angular dependency injection
+Inject          : 'inject';
+Injector        : 'Injector';
+InjectionToken  : 'InjectionToken';
+
 //
 // Ext.2 Additions to 1.8: Decorators
 //

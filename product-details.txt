@@ -6,7 +6,6 @@ import { CommonModule } from '@angular/common';
   selector: 'app-product-details',
   standalone: true,
   imports: [CommonModule],
-  //templateUrl:'./product-details.component.html',
   template: `
       <div *ngIf=product>
         <h2>{{ product.name }}</h2>
@@ -17,18 +16,10 @@ import { CommonModule } from '@angular/common';
         <p>Please select a product to view detailss.</p>
       </div>
     `,
-  //templatee
-
 })
 export class ProductDetailsComponent {
   @Input() product: any;
-//@Input() productt: any;
-// @Output() productt: any;
-
 }
 
-class ProductDetailsComponent {
-
-}
 
 

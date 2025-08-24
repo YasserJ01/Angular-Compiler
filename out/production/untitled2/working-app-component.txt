@@ -1,0 +1,347 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  template: `
+    <div class="app-container">
+      <header class="app-header">
+        <h1>Product Management System</h1>
+        <nav class="app-nav">
+          <button class="nav-btn"
+                  [class.active]="currentView === 'products'"
+                  (click)="setView('products')">
+            All Products
+          </button>
+          <button class="nav-btn"
+                  [class.active]="currentView === 'add'"
+                  (click)="setView('add')">
+            Add Product
+          </button>
+        </nav>
+      </header>
+
+      <main class="app-main">
+        <!-- Products List View -->
+        <div *ngIf="currentView === 'products'" class="view-container">
+          <div class="products-header">
+            <h2>All Products ({{ products.length }})</h2>
+            <button class="btn btn-primary" (click)="setView('add')">
+              + Add New Product
+            </button>
+          </div>
+
+          <div *ngIf="products.length === 0" class="empty-state">
+            <img src="https://via.placeholder.com/200x150?text=No+Products" alt="No products" class="empty-image">
+            <h3>No Products Available</h3>
+            <p>Get started by adding your first product!</p>
+            <button class="btn btn-primary" (click)="setView('add')">
+              Add First Product
+            </button>
+          </div>
+
+          <div *ngIf="products.length > 0" class="products-grid">
+            <div *ngFor="let product of products; trackBy: trackByProductId"
+                 class="product-card"
+                 (click)="viewProductDetails(product)">
+              <div class="product-image-container">
+                <img [src]="product.image"
+                     [alt]="product.name"
+                     class="product-image"
+                     (error)="onImageError($event)">
+                <div class="product-actions">
+                  <button class="action-btn edit-btn"
+                          (click)="editProduct(product); $event.stopPropagation()"
+                          title="Edit Product">
+                    ✏️
+                  </button>
+                  <button class="action-btn delete-btn"
+                          (click)="deleteProduct(product.id); $event.stopPropagation()"
+                          title="Delete Product">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <div class="product-info">
+                <h3 class="product-name">{{ product.name }}</h3>
+                <p class="product-price">${{ product.price }}</p>
+                <p class="product-category">{{ product.category }}</p>
+                <p class="product-description">{{ product.description | slice:0:100 }}{{ product.description.length > 100 ? '...' : '' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add/Edit Product View -->
+        <div *ngIf="currentView === 'add' || currentView === 'edit'" class="view-container">
+          <div class="form-header">
+            <h2>{{ isEditing ? 'Edit Product' : 'Add New Product' }}</h2>
+            <button class="btn btn-secondary" (click)="cancelForm()">
+              ← Back to Products
+            </button>
+          </div>
+
+          <form class="product-form" (submit)="submitProduct($event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="productName">Product Name *</label>
+                <input type="text"
+                       id="productName"
+                       [(ngModel)]="currentProduct.name"
+                       required
+                       maxlength="100"
+                       placeholder="Enter product name">
+              </div>
+              <div class="form-group">
+                <label for="productPrice">Price *</label>
+                <input type="number"
+                       id="productPrice"
+                       [(ngModel)]="currentProduct.price"
+                       required
+                       min="0"
+                       step="0.01"
+                       placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="productCategory">Category *</label>
+                <select id="productCategory" [(ngModel)]="currentProduct.category" required>
+                  <option value="">Select Category</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Clothing">Clothing</option>
+                  <option value="Books">Books</option>
+                  <option value="Home">Home & Garden</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="productImage">Image URL</label>
+                <input type="url"
+                       id="productImage"
+                       [(ngModel)]="currentProduct.image"
+                       placeholder="https://example.com/image.jpg">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="productDescription">Description</label>
+              <textarea id="productDescription"
+                        [(ngModel)]="currentProduct.description"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Enter product description (optional)"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" (click)="cancelForm()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                {{ isEditing ? 'Update Product' : 'Add Product' }}
+              </button>
+            </div>
+          </form>
+
+          <!-- Image Preview -->
+          <div *ngIf="currentProduct.image" class="image-preview">
+            <h3>Image Preview</h3>
+            <img [src]="currentProduct.image"
+                 [alt]="currentProduct.name"
+                 class="preview-image"
+                 (error)="onImageError($event)">
+          </div>
+        </div>
+
+        <!-- Product Details View -->
+        <div *ngIf="currentView === 'details' && selectedProduct" class="view-container">
+          <div class="details-header">
+            <button class="btn btn-secondary" (click)="setView('products')">
+              ← Back to Products
+            </button>
+            <div class="details-actions">
+              <button class="btn btn-outline" (click)="editProduct(selectedProduct)">
+                Edit Product
+              </button>
+              <button class="btn btn-danger" (click)="deleteProduct(selectedProduct.id)">
+                Delete Product
+              </button>
+            </div>
+          </div>
+
+          <div class="product-details">
+            <div class="details-image">
+              <img [src]="selectedProduct.image"
+                   [alt]="selectedProduct.name"
+                   class="detail-image"
+                   (error)="onImageError($event)">
+            </div>
+            <div class="details-content">
+              <h1 class="details-title">{{ selectedProduct.name }}</h1>
+              <p class="details-price">${{ selectedProduct.price }}</p>
+              <p class="details-category">
+                <span class="category-label">Category:</span> {{ selectedProduct.category }}
+              </p>
+              <p class="details-id">
+                <span class="id-label">Product ID:</span> {{ selectedProduct.id }}
+              </p>
+              <div class="details-description">
+                <h3>Description</h3>
+                <p>{{ selectedProduct.description || 'No description available.' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Confirmation Modal -->
+      <div *ngIf="showDeleteModal" class="modal-overlay" (click)="cancelDelete()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <h3>Confirm Delete</h3>
+          <p>Are you sure you want to delete "{{ productToDelete?.name }}"?</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+            <button class="btn btn-danger" (click)="confirmDelete()">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+})
+export class AppComponent {
+  currentView: string = 'products';
+  products: any[] = [];
+  selectedProduct: any = null;
+  currentProduct: any = {};
+  isEditing: boolean = false;
+  showDeleteModal: boolean = false;
+  productToDelete: any = null;
+  nextId: number = 1;
+
+  constructor() {
+    this.loadSampleData();
+    this.resetCurrentProduct();
+  }
+
+  loadSampleData() {
+    this.products = [
+      {
+        id: 1,
+        name: 'Wireless Headphones',
+        price: 99.99,
+        category: 'Electronics',
+        description: 'High-quality wireless headphones with noise cancellation and long battery life.',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop'
+      },
+      {
+        id: 2,
+        name: 'Smart Watch',
+        price: 249.99,
+        category: 'Electronics',
+        description: 'Feature-rich smartwatch with health tracking and smartphone integration.',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop'
+      },
+      {
+        id: 3,
+        name: 'Running Shoes',
+        price: 129.99,
+        category: 'Sports',
+        description: 'Comfortable running shoes with excellent support and cushioning.',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop'
+      }
+    ];
+    this.nextId = Math.max(...this.products.map(p => p.id)) + 1;
+  }
+
+  setView(view: string) {
+    this.currentView = view;
+    if (view === 'add') {
+      this.isEditing = false;
+      this.resetCurrentProduct();
+    }
+  }
+
+  resetCurrentProduct() {
+    this.currentProduct = {
+      name: '',
+      price: 0,
+      category: '',
+      description: '',
+      image: ''
+    };
+  }
+
+  trackByProductId(index: number, product: any): number {
+    return product.id;
+  }
+
+  viewProductDetails(product: any) {
+    this.selectedProduct = product;
+    this.currentView = 'details';
+  }
+
+  editProduct(product: any) {
+    this.isEditing = true;
+    this.currentProduct = { ...product };
+    this.currentView = 'edit';
+  }
+
+  submitProduct(event: Event) {
+    event.preventDefault();
+
+    if (this.isEditing) {
+      const index = this.products.findIndex(p => p.id === this.currentProduct.id);
+      if (index !== -1) {
+        this.products[index] = { ...this.currentProduct };
+      }
+    } else {
+      const newProduct = {
+        ...this.currentProduct,
+        id: this.nextId++
+      };
+      this.products.push(newProduct);
+    }
+
+    this.resetCurrentProduct();
+    this.setView('products');
+  }
+
+  deleteProduct(productId: number) {
+    const product = this.products.find(p => p.id === productId);
+    if (product) {
+      this.productToDelete = product;
+      this.showDeleteModal = true;
+    }
+  }
+
+  confirmDelete() {
+    if (this.productToDelete) {
+      this.products = this.products.filter(p => p.id !== this.productToDelete.id);
+      this.showDeleteModal = false;
+      this.productToDelete = null;
+
+      if (this.selectedProduct && this.selectedProduct.id === this.productToDelete.id) {
+        this.selectedProduct = null;
+        this.setView('products');
+      }
+    }
+  }
+
+  cancelDelete() {
+    this.showDeleteModal = false;
+    this.productToDelete = null;
+  }
+
+  cancelForm() {
+    this.resetCurrentProduct();
+    this.isEditing = false;
+    this.setView('products');
+  }
+
+  onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+  }
+}

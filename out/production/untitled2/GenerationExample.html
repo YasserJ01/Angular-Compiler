@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Angular to HTML Conversion</title>
+  <style>
+        .product-details {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background: #e0e0e0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="app-root"></div>
+<div id="app-product-details"></div>
+<div id="app-product-list"></div>
+
+<script>
+        // Product interface equivalent
+        class Product {
+            constructor(productId, name, price, imgSrc, details,) {
+                this.productId = productId;
+                this.name = name;
+                this.price = price;
+                this.imgSrc = imgSrc;
+                this.details = details;
+            }
+        }
+
+        // AppComponent implementation
+        function AppComponent() {
+            this.products = [
+                new Product(0, "ProductName1", 200, "../Files/pizza.png", "Product Details 1"),
+                new Product(1, "ProductName2", 400, "../Files/salad.png", "Product Details 2"),
+                new Product(2, "ProductName3", 700, "../Files/sandwich.png", "Product Details 3"),
+                new Product(3, "ProductName4", 500, "../Files/soup.png", "Product Details 4")
+            ];
+            this.choosenProduct = null;
+        }
+
+        AppComponent.prototype.setChoosenProduct = function(productId) {
+            this.choosenProduct = productId;
+            this.render();
+            ProductDetailsComponent.prototype.render(this.products[this.choosenProduct]);
+        };
+
+        AppComponent.prototype.render = function() {
+            const container = document.getElementById('app-root');
+            container.innerHTML = '';
+
+            // *ngFor="let item of products" conversion
+            for (const item of this.products) {
+                const button = document.createElement('button');
+
+                // (click)="setChoosenProduct(item.productId)" conversion
+                button.onclick = () => this.setChoosenProduct(item.productId);
+
+                // <app-product-list [data]="item"></app-product-list> conversion
+                const productList = document.createElement('div');
+                productList.innerHTML = ProductListComponent.prototype.render(item);
+                button.appendChild(productList);
+
+                container.appendChild(button);
+            }
+        };
+
+        // ProductDetailsComponent implementation
+        function ProductDetailsComponent() {
+            this.item = null;
+        }
+
+        ProductDetailsComponent.prototype.render = function(item) {
+            this.item = item;
+            const container = document.getElementById('app-product-details');
+            container.innerHTML = '';
+
+            if (!this.item) {
+                return;
+            }
+
+            // *ngIf="item" conversion
+            const div = document.createElement('div');
+            div.className = 'product-details';
+
+            // {{item.name}} conversion
+            const h1 = document.createElement('h1');
+            h1.textContent = this.item.name;
+
+            // [src]="item.imgSrc" conversion
+            const img = document.createElement('img');
+            img.src = this.item.imgSrc;
+            img.alt = this.item.name;
+
+            // {{item.price}} conversion
+            const price = document.createElement('p');
+            price.textContent = `Price: $${this.item.price}`;
+
+            // {{item.details}} conversion
+            const details = document.createElement('p');
+            details.textContent = this.item.details;
+
+            div.appendChild(h1);
+            div.appendChild(img);
+            div.appendChild(price);
+            div.appendChild(details);
+
+            container.appendChild(div);
+        };
+
+        // ProductListComponent implementation
+        function ProductListComponent() {
+            this.data = null;
+        }
+
+        ProductListComponent.prototype.render = function(data) {
+            this.data = data;
+            const div = document.createElement('div');
+
+            // {{data.name}} conversion
+            const h1 = document.createElement('h1');
+            h1.textContent = this.data.name;
+
+            // [src]="data.imgSrc" conversion
+            const img = document.createElement('img');
+            img.src = this.data.imgSrc;
+            img.alt = this.data.name;
+
+            div.appendChild(h1);
+            div.appendChild(img);
+
+            return div.outerHTML;
+        };
+
+        // Initialize the application
+        const app = new AppComponent();
+        app.render();
+
+        // Initialize other components
+        new ProductDetailsComponent();
+        new ProductListComponent();
+    </script>
+</body>
+</html>

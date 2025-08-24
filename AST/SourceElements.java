@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SourceElements {
-    List<SourceElement> sourceElement = new ArrayList<SourceElement>();
+    List<Statement> statement = new ArrayList<Statement>();
 
-    public List<SourceElement> getSourceElement() {
-        return sourceElement;
+    public List<Statement> getStatement() {
+        return statement;
     }
 
-    public void setSourceElement(List<SourceElement> sourceElement) {
-        this.sourceElement = sourceElement;
+    public void setStatement(List<Statement> statement) {
+        this.statement = statement;
     }
 
     @Override
     public String toString() {
-        return "SourceElements{" +'\n'+
-                sourceElement +'\n'+
+        return "SourceElements{\n" +
+                statement + '\n' +
                 '}';
     }
 }

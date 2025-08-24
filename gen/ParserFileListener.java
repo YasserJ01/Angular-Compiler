@@ -28,16 +28,6 @@ public interface ParserFileListener extends ParseTreeListener {
 	 */
 	void exitSourceElements(ParserFile.SourceElementsContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ParserFile#sourceElement}.
-	 * @param ctx the parse tree
-	 */
-	void enterSourceElement(ParserFile.SourceElementContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ParserFile#sourceElement}.
-	 * @param ctx the parse tree
-	 */
-	void exitSourceElement(ParserFile.SourceElementContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link ParserFile#statement}.
 	 * @param ctx the parse tree
 	 */
@@ -127,6 +117,46 @@ public interface ParserFileListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFunctionDeclaration(ParserFile.FunctionDeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ParserFile#stateManagementStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterStateManagementStatement(ParserFile.StateManagementStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ParserFile#stateManagementStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitStateManagementStatement(ParserFile.StateManagementStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ParserFile#navigationStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterNavigationStatement(ParserFile.NavigationStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ParserFile#navigationStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitNavigationStatement(ParserFile.NavigationStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ParserFile#injectionStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterInjectionStatement(ParserFile.InjectionStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ParserFile#injectionStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitInjectionStatement(ParserFile.InjectionStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ParserFile#routeDefinitionStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterRouteDefinitionStatement(ParserFile.RouteDefinitionStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ParserFile#routeDefinitionStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitRouteDefinitionStatement(ParserFile.RouteDefinitionStatementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ParserFile#reservedWord}.
 	 * @param ctx the parse tree

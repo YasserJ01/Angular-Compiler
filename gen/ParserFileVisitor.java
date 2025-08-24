@@ -23,12 +23,6 @@ public interface ParserFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSourceElements(ParserFile.SourceElementsContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ParserFile#sourceElement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSourceElement(ParserFile.SourceElementContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link ParserFile#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -82,6 +76,30 @@ public interface ParserFileVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFunctionDeclaration(ParserFile.FunctionDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ParserFile#stateManagementStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStateManagementStatement(ParserFile.StateManagementStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ParserFile#navigationStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNavigationStatement(ParserFile.NavigationStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ParserFile#injectionStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInjectionStatement(ParserFile.InjectionStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ParserFile#routeDefinitionStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRouteDefinitionStatement(ParserFile.RouteDefinitionStatementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ParserFile#reservedWord}.
 	 * @param ctx the parse tree

@@ -1,0 +1,36 @@
+// app.component.ts
+import { Component } from '@angular/core';
+
+interface Product {
+  productId: number;
+  name: string;
+  price: number;
+  imgSrc: string;
+  details: string;
+}
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <div>
+      <button *ngFor="let item of products" (click)="setChoosenProduct(item.productId)">
+        <app-product-list [data]="item"></app-product-list>
+      </button>
+      <app-product-details [item]="products[choosenProduct]"></app-product-details>
+    </div>
+  `
+})
+export class AppComponent {
+  products: Product[] = [
+    { productId: 0, name: "ProductName1", price: 200, imgSrc: "../Files/pizza.png", details: "Product Details 1" },
+    { productId: 1, name: "ProductName2", price: 400, imgSrc: "../Files/salad.png", details: "Product Details 2" },
+    { productId: 2, name: "ProductName3", price: 700, imgSrc: "../Files/sandwich.png", details: "Product Details 3" },
+    { productId: 3, name: "ProductName4", price: 500, imgSrc: "../Files/soup.png", details: "Product Details 4" }
+  ];
+
+  choosenProduct: number  null = null;
+
+  setChoosenProduct(productId: number) {
+    this.choosenProduct = productId;
+  }
+}

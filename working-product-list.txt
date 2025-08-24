@@ -1,0 +1,132 @@
+import { Component, EventEmitter, Output, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-product-list',
+  standalone: true,
+  template: `
+    <div class="product-list-container">
+      <div class="list-header">
+        <h2>Products Catalog</h2>
+        <div class="list-controls">
+          <input type="text"
+                 class="search-input"
+                 [(ngModel)]="searchTerm"
+                 (input)="filterProducts()"
+                 placeholder="Search products...">
+          <select class="filter-select" [(ngModel)]="selectedCategory" (change)="filterProducts()">
+            <option value="">All Categories</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Books">Books</option>
+            <option value="Home">Home & Garden</option>
+            <option value="Sports">Sports</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="products-container">
+        <div *ngIf="filteredProducts.length === 0" class="no-products">
+          <img src="https://via.placeholder.com/200x150?text=No+Results" alt="No results" class="no-results-image">
+          <h3>No products found</h3>
+          <p *ngIf="searchTerm || selectedCategory">Try adjusting your search or filter criteria.</p>
+        </div>
+
+        <div class="products-grid">
+          <div *ngFor="let product of filteredProducts; trackBy: trackByProductId"
+               class="product-item"
+               [class.selected]="selectedProductId === product.id">
+
+            <div class="product-image-wrapper" (click)="selectProduct(product)">
+              <img [src]="product.image"
+                   [alt]="product.name"
+                   class="product-thumbnail"
+                   (error)="handleImageError($event)">
+              <div class="product-overlay">
+                <span class="view-details">View Details</span>
+              </div>
+            </div>
+
+            <div class="product-content">
+              <h3 class="product-title" (click)="selectProduct(product)">{{ product.name }}</h3>
+              <p class="product-price-tag">${{ product.price | number:'1.2-2' }}</p>
+              <p class="product-category-tag">{{ product.category }}</p>
+
+              <div class="product-actions">
+                <button class="action-button primary" (click)="selectProduct(product)">
+                  👁️ View
+                </button>
+                <button class="action-button secondary" (click)="editProduct(product)">
+                  ✏️ Edit
+                </button>
+                <button class="action-button danger" (click)="removeProduct(product)">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-footer">
+        <p class="results-count">
+          Showing {{ filteredProducts.length }} of {{ products.length }} products
+        </p>
+      </div>
+    </div>
+  `
+})
+export class ProductListComponent {
+  @Input() products: any[] = [];
+  @Input() selectedProductId: number | null = null;
+
+  @Output() productSelected = new EventEmitter<any>();
+  @Output() productEdit = new EventEmitter<any>();
+  @Output() productDelete = new EventEmitter<any>();
+
+  searchTerm: string = '';
+  selectedCategory: string = '';
+  filteredProducts: any[] = [];
+
+  ngOnInit() {
+    this.filteredProducts = [...this.products];
+  }
+
+  ngOnChanges() {
+    this.filterProducts();
+  }
+
+  trackByProductId(index: number, product: any): number {
+    return product.id;
+  }
+
+  filterProducts() {
+    this.filteredProducts = this.products.filter(product => {
+      const matchesSearch = !this.searchTerm ||
+        product.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      const matchesCategory = !this.selectedCategory ||
+        product.category === this.selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }
+
+  selectProduct(product: any) {
+    this.productSelected.emit(product);
+  }
+
+  editProduct(product: any) {
+    this.productEdit.emit(product);
+  }
+
+  removeProduct(product: any) {
+    this.productDelete.emit(product);
+  }
+
+  handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://via.placeholder.com/300x200?text=No+Image';
+  }
+}

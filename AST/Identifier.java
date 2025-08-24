@@ -27,6 +27,7 @@ public class Identifier {
     String createAction;
     String createReducer;
     String createSelector;
+    String Selector;
     String routerModule;
     String forRoot;
     String forFeature;
@@ -235,6 +236,14 @@ public class Identifier {
         this.createSelector = createSelector;
     }
 
+    public String getSelector() {
+        return Selector;
+    }
+
+    public void setSelector(String selector) {
+        Selector = selector;
+    }
+
     public String getRouterModule() {
         return routerModule;
     }
@@ -431,6 +440,10 @@ public class Identifier {
         } else if (navigateByUrl != null) {
             return "Identifier{" +
                     "navigateByUrl='" + navigateByUrl + '\n' +
+                    '}';
+        } else if (Selector != null) {
+            return "Identifier{" +
+                    "Selector='" + Selector + '\n' +
                     '}';
         }
         return "Identifier{" +

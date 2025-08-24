@@ -1,4 +1,3 @@
-
 parser grammar ParserFile;
 
 options {
@@ -9,11 +8,8 @@ program
     : sourceElements? EOF
     ;
 
-sourceElements
-    : sourceElement+
-    ;
 
-sourceElement
+sourceElements
     : statement+
     ;
 
@@ -36,6 +32,10 @@ statement
     | switchStatement
     | throwStatement
     | tryStatement
+    | stateManagementStatement
+    | navigationStatement
+    | injectionStatement
+    | routeDefinitionStatement
     ;
 
 block
@@ -72,6 +72,42 @@ classTail
 
 functionDeclaration
     : Async? Function_ '*'? identifier callSignature (('{' functionBody '}') | SemiColon)
+    ;
+
+// Enhanced with Angular state management
+stateManagementStatement
+    : Signal '<' type_ '>' '(' singleExpression ')' eos
+    | WritableSignal '<' type_ '>' '(' singleExpression ')' eos
+    | BehaviorSubject '<' type_ '>' '(' singleExpression ')' eos
+    | Observable '<' type_ '>' '(' singleExpression ')' eos
+    | CreateAction '(' StringLiteral (',' objectLiteral)? ')' eos
+    | CreateReducer '(' identifier ',' singleExpression ')' eos
+    | CreateSelector '(' singleExpression (',' singleExpression)* ')' eos
+    | Store '.' Select '(' singleExpression ')' eos
+    | Store '.' Dispatch '(' singleExpression ')' eos
+    ;
+
+// Enhanced navigation statements
+navigationStatement
+    : Router '.' Navigate '(' arrayLiteral (',' objectLiteral)? ')' eos
+    | Router '.' NavigateByUrl '(' StringLiteral (',' objectLiteral)? ')' eos
+    | '[' RouterLink ']' '=' StringLiteral
+    | RouterLinkActive '=' StringLiteral
+    ;
+
+// Dependency injection statements
+injectionStatement
+    : Inject '(' identifier ')' typeAnnotation? eos
+    | '@' Injectable '(' objectLiteral? ')' eos
+    | identifier '=' Inject '(' identifier ')' eos
+    ;
+
+// Route definition statement
+routeDefinitionStatement
+    : Routes '=' arrayLiteral eos
+    | Route '=' objectLiteral eos
+    | RouterModule '.' ForRoot '(' arrayLiteral (',' objectLiteral)? ')' eos
+    | RouterModule '.' ForFeature '(' arrayLiteral (',' objectLiteral)? ')' eos
     ;
 
 reservedWord
@@ -469,6 +505,21 @@ singleExpression
     | typeArguments expressionSequence?
     | singleExpression As asExpression
     | singleExpression '!'
+    // Angular state management expressions
+    | Signal '(' singleExpression ')'
+    | WritableSignal '(' singleExpression ')'
+    | Computed '(' singleExpression ')'
+    | Effect '(' singleExpression ')'
+    | Store '.' Select '(' singleExpression ')'
+    | Store '.' Dispatch '(' singleExpression ')'
+    | CreateAction '(' StringLiteral (',' objectLiteral)? ')'
+    | CreateReducer '(' identifier ',' singleExpression ')'
+    | CreateSelector '(' singleExpression (',' singleExpression)* ')'
+    // Angular navigation expressions
+    | Router '.' Navigate '(' arrayLiteral (',' objectLiteral)? ')'
+    | Router '.' NavigateByUrl '(' StringLiteral (',' objectLiteral)? ')'
+    // Angular injection expressions
+    | Inject '(' identifier ')'
     ;
 
 htmlElements
@@ -510,11 +561,16 @@ htmlTagName
     : TagName
     | keyword
     | Identifier
+    | RouterOutlet
     ;
 
 htmlAttribute
     : '*'? (htmlAttributeName | Class) ('=' htmlAttributeValue)?
     | AngularDirective '=' propertyName
+    | RouterLink '=' StringLiteral
+    | RouterLinkActive '=' StringLiteral
+    | '[' RouterLink ']' '=' StringLiteral
+    | '[' RouterLinkActive ']' '=' StringLiteral
     ;
 
 htmlAttributeName
@@ -523,6 +579,8 @@ htmlAttributeName
     | Identifier ('-' Identifier)*
     |'(' Identifier ')'
     |'[' Identifier ']'
+    | RouterLink
+    | RouterLinkActive
     ;
 
 htmlAttributeValue
@@ -538,6 +596,7 @@ interpolationExpression
 
 htmlSequence
     : propertyName '.' identifierName
+    | singleExpression
     ;
 
 asExpression
@@ -628,6 +687,39 @@ identifier
     | NavigateByUrl
     | ForRoot
     | ForFeature
+    // Enhanced Angular identifiers
+    | Store
+    | Injectable
+    | Signal
+    | Computed
+    | Effect
+    | WritableSignal
+    | ReadonlySignal
+    | BehaviorSubject
+    | Observable
+    | Subject
+    | Router
+    | ActivatedRoute
+    | Route
+    | Routes
+    | RouterOutlet
+    | RouterLink
+    | RouterLinkActive
+    | State
+    | Action
+    | Reducer
+    | Selector
+    | OnInit
+    | OnDestroy
+    | OnChanges
+    | AfterViewInit
+    | NgOnInit
+    | NgOnDestroy
+    | NgOnChanges
+    | NgAfterViewInit
+    | Inject
+    | Injector
+    | InjectionToken
     ;
 
 identifierOrKeyWord
@@ -710,6 +802,16 @@ predefinedType
     | Undefined
     | Object
     | Void
+    // Angular-specific types
+    | Observable
+    | Signal
+    | WritableSignal
+    | ReadonlySignal
+    | BehaviorSubject
+    | Subject
+    | Router
+    | ActivatedRoute
+    | Routes
     ;
 
 typeReference

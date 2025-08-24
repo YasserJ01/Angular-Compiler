@@ -1,0 +1,153 @@
+//================================================================================
+// AppComponent  (root)
+//================================================================================
+import { Component } from '@angular/core';
+import { ProductListComponent } from './product-list/product-list.component';
+import { ProductDetailsComponent } from './product-details/product-details.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [ProductListComponent, ProductDetailsComponent],
+  template: `
+    <div class="shell">
+      <header>
+        <h1>Product Manager</h1>
+        <nav>
+          <button (click)="show='list'">List</button>
+          <button (click)="show='add'">Add</button>
+        </nav>
+      </header>
+
+      <!-- LIST -->
+      <section *ngIf="show==='list'">
+        <h2>All Products</h2>
+        <app-product-list (selectedProduct)="showDetails($event)"></app-product-list>
+      </section>
+
+      <!-- ADD / EDIT -->
+      <section *ngIf="show==='add'">
+        <h2>Add Product</h2>
+        <form (submit)="save($event)">
+          <label>Name:
+            <input [(value)]="form.name" required>
+          </label>
+          <label>Price:
+            <input type="number" [(value)]="form.price" required>
+          </label>
+          <label>Image URL:
+            <input [(value)]="form.image" required>
+          </label>
+          <button type="submit">Save</button>
+          <button type="button" (click)="cancel()">Cancel</button>
+        </form>
+      </section>
+
+      <!-- DETAILS -->
+      <section *ngIf="currentProduct">
+        <h2>{{ currentProduct.name }}</h2>
+        <img [src]="currentProduct.image" style="max-width:400px">
+        <p>${{ currentProduct.price }}</p>
+        <p>{{ currentProduct.details }}</p>
+      </section>
+    </div>
+  `,
+  styles: [`
+    body { margin:0; font-family:system-ui, sans-serif; background:#f6f7f9 }
+    .shell { max-width:960px; margin:0 auto; padding:16px }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px }
+    h1 { margin:0 }
+    button { margin-left:8px }
+    section { margin-top:16px }
+  `]
+})
+export class AppComponent {
+  show = 'list';
+  currentProduct: any = null;
+
+  products = [
+    { id: 1, name: 'iPhone 15', price: 999, image: 'https://picsum.photos/seed/ip15/400', details: 'Latest Apple flagship' },
+    { id: 2, name: 'Galaxy S24', price: 899, image: 'https://picsum.photos/seed/gs24/400', details: 'Samsung powerhouse' }
+  ];
+
+  form = { name: '', price: 0, image: '' };
+
+  showDetails(product: any) { this.currentProduct = product; }
+
+  save(e: Event) {
+    e.preventDefault();
+    const newProd = { ...this.form, id: Date.now() };
+    this.products.push(newProd);
+    this.show = 'list';
+    this.form = { name: '', price: 0, image: '' };
+  }
+
+  cancel() {
+    this.show = 'list';
+    this.form = { name: '', price: 0, image: '' };
+  }
+}
+
+//================================================================================
+// ProductListComponent  (inline)
+//================================================================================
+@Component({
+  selector: 'app-product-list',
+  standalone: true,
+  template: `
+    <div class="grid">
+      <div *ngFor="let product of products" class="card" (click)="selectProduct(product)">
+        <img [src]="product.image" [alt]="product.name">
+        <h3>{{ product.name }}</h3>
+        <span>${{ product.price }}</span>
+        <button (click)="delete(product); $event.stopPropagation()">Delete</button>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px }
+    .card { border:1px solid #ddd; border-radius:6px; padding:8px; cursor:pointer }
+    img { width:100%; height:120px; object-fit:cover; border-radius:4px }
+  `]
+})
+export class ProductListComponent {
+  products = [
+    { id: 1, name: 'iPhone 15', price: 999, image: 'https://picsum.photos/seed/ip15/400', details: 'Latest Apple flagship' },
+    { id: 2, name: 'Galaxy S24', price: 899, image: 'https://picsum.photos/seed/gs24/400', details: 'Samsung powerhouse' }
+  ];
+
+  selectProduct(product: any) {
+    // bubble up to AppComponent via @Output
+    const event = new CustomEvent('selectedProduct', { detail: product });
+    document.dispatchEvent(event);
+  }
+
+  delete(product: any) {
+    this.products = this.products.filter(p => p !== product);
+  }
+}
+
+//================================================================================
+// ProductDetailsComponent  (inline)
+//================================================================================
+@Component({
+  selector: 'app-product-details',
+  standalone: true,
+  template: `
+    <div *ngIf="product">
+      <h2>{{ product.name }}</h2>
+      <img [src]="product.image" [alt]="product.name" style="width:100%; height:auto">
+      <p>${{ product.price }}</p>
+      <p>{{ product.details }}</p>
+    </div>
+    <div *ngIf="!product">
+      <p>Please select a product to view details.</p>
+    </div>
+  `,
+  styles: [`
+    h2 { margin-top:0 }
+  `]
+})
+export class ProductDetailsComponent {
+  @Input() product: any;
+}

@@ -17,6 +17,7 @@ public class BaseVisitor extends ParserFileBaseVisitor {
 
     SymbolTable symbolTable = Main.st;
 
+
     @Override
     public Program visitProgram(ParserFile.ProgramContext ctx) {
         this.symbolTable.addoutside();
@@ -33,6 +34,7 @@ public class BaseVisitor extends ParserFileBaseVisitor {
 
 
         SemanticCheck semanticCheck = new SemanticCheck();
+
         //  semanticCheck.setSymbolTable(this.symbolTable);
         semanticCheck.Check_PropertyMatching(this.symbolTable);
         semanticCheck.Check_ifDuplicate_class(this.symbolTable);
@@ -43,6 +45,7 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         semanticCheck.Check_InputOutputConflict(this.symbolTable);
         semanticCheck.printErrorsWithContext();
 
+
 //        semanticCheck.printErrors();
 
         return program;
@@ -51,14 +54,15 @@ public class BaseVisitor extends ParserFileBaseVisitor {
 
     @Override
     public SourceElements visitSourceElements(ParserFile.SourceElementsContext ctx) {
-        SourceElements sourceElements = new SourceElements();
-        for (int i = 0; i < ctx.sourceElement().size(); i++) {
-            if (ctx.sourceElement() != null) {
-                sourceElements.getSourceElement().add(visitSourceElement(ctx.sourceElement(i)));
+        SourceElements sourceElement = new SourceElements();
+        for (int i = 0; i < ctx.statement().size(); i++) {
+            if (ctx.statement() != null) {
+                sourceElement.getStatement().add(visitStatement(ctx.statement(i)));
             }
         }
-        return sourceElements;
+        return sourceElement;
     }
+
 
     @Override
     public HtmlTagClosingName visitHtmlTagClosingName(ParserFile.HtmlTagClosingNameContext ctx) {
@@ -443,7 +447,7 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         forVarInStatement.setVariableDeclaration(visitVariableDeclaration(ctx.variableDeclaration()));
         forVarInStatement.setStatement(visitStatement(ctx.statement()));
         forVarInStatement.setExpressionSequence(visitExpressionSequence(ctx.expressionSequence()));
-        return  forVarInStatement;
+        return forVarInStatement;
     }
 
 
@@ -941,6 +945,16 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         if (ctx.predefinedType() != null) {
             primaryType.setPredefinedType(visitPredefinedType(ctx.predefinedType()));
         }
+        for (int i = 0; i < ctx.primaryType().size(); i++) {
+            if (ctx.primaryType() != null) {
+                primaryType.getPrimaryType().add(visitPrimaryType(ctx.primaryType(i)));
+            }
+        }
+        if (ctx.typeReference() != null) {
+            primaryType.setTypeReference(visitTypeReference(ctx.typeReference()));
+        }
+
+
         return primaryType;
     }
 
@@ -1670,16 +1684,6 @@ public class BaseVisitor extends ParserFileBaseVisitor {
     }
 
 
-    @Override
-    public SourceElement visitSourceElement(ParserFile.SourceElementContext ctx) {
-        SourceElement sourceElement = new SourceElement();
-        for (int i = 0; i < ctx.statement().size(); i++) {
-            if (ctx.statement() != null) {
-                sourceElement.getStatement().add(visitStatement(ctx.statement(i)));
-            }
-        }
-        return sourceElement;
-    }
 
     @Override
     public StatementList visitStatementList(ParserFile.StatementListContext ctx) {
@@ -1959,10 +1963,6 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         Identifier identifier = new Identifier();
         if (ctx.Identifier() != null) {
             identifier.setIdentifier(ctx.Identifier().getText());
-//            Row row = new Row();
-//            row.setType("Identifier");
-//            row.setValue(ctx.Identifier().getText());
-//            symbolTable.getRows().add(row);
         }
         if (ctx.Async() != null) {
             identifier.setAsync(ctx.Async().getText());
@@ -1996,6 +1996,9 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         if (ctx.Symbol() != null) {
             identifier.setSymbol(ctx.Symbol().getText());
+        }
+        if (ctx.Selector() != null) {
+            identifier.setSelector(ctx.Selector().getText());
         }
         if (ctx.Never() != null) {
             identifier.setNever(ctx.Never().getText());
@@ -2069,7 +2072,6 @@ public class BaseVisitor extends ParserFileBaseVisitor {
         }
         if (ctx.Interface() != null) {
             keyword.setInterface(ctx.Interface().getText());
-            String interfaceName = ctx.Interface().getText();
 
         }
         if (ctx.Do() != null) {

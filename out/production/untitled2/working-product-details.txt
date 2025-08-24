@@ -1,0 +1,161 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+
+@Component({
+  selector: 'app-product-details',
+  standalone: true,
+  template: `
+    <div *ngIf="product" class="product-details-container">
+      <div class="details-navigation">
+        <button class="nav-button back" (click)="goBack()">
+          ← Back to List
+        </button>
+        <div class="nav-actions">
+          <button class="nav-button edit" (click)="editCurrentProduct()">
+            ✏️ Edit Product
+          </button>
+          <button class="nav-button delete" (click)="deleteCurrentProduct()">
+            🗑️ Delete Product
+          </button>
+        </div>
+      </div>
+
+      <div class="product-showcase">
+        <div class="image-section">
+          <div class="main-image">
+            <img [src]="product.image"
+                 [alt]="product.name"
+                 class="product-main-image"
+                 (error)="onImageLoadError($event)">
+          </div>
+          <div class="image-info">
+            <p class="image-caption">Product Image</p>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <div class="product-header">
+            <h1 class="product-name">{{ product.name }}</h1>
+            <div class="product-meta">
+              <span class="product-id">ID: {{ product.id }}</span>
+              <span class="product-category-badge">{{ product.category }}</span>
+            </div>
+          </div>
+
+          <div class="pricing-section">
+            <div class="price-display">
+              <span class="currency">$</span>
+              <span class="price-amount">{{ product.price | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="product-description">
+            <h3>Product Description</h3>
+            <p class="description-text">
+              {{ product.description || 'No description available for this product.' }}
+            </p>
+          </div>
+
+          <div class="product-specifications">
+            <h3>Product Information</h3>
+            <div class="specs-grid">
+              <div class="spec-item">
+                <span class="spec-label">Category:</span>
+                <span class="spec-value">{{ product.category }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Price:</span>
+                <span class="spec-value">${{ product.price | number:'1.2-2' }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Product ID:</span>
+                <span class="spec-value">{{ product.id }}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Availability:</span>
+                <span class="spec-value available">In Stock</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-section">
+            <button class="action-btn primary-action" (click)="editCurrentProduct()">
+              Edit This Product
+            </button>
+            <button class="action-btn secondary-action" (click)="goBack()">
+              View All Products
+            </button>
+            <button class="action-btn danger-action" (click)="deleteCurrentProduct()">
+              Delete Product
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Product Info Section -->
+      <div class="additional-info">
+        <div class="info-cards">
+          <div class="info-card">
+            <div class="card-icon">📦</div>
+            <div class="card-content">
+              <h4>Fast Shipping</h4>
+              <p>Free delivery on orders over $50</p>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">↩️</div>
+            <div class="card-content">
+              <h4>Easy Returns</h4>
+              <p>30-day return policy</p>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🛡️</div>
+            <div class="card-content">
+              <h4>Warranty</h4>
+              <p>1-year manufacturer warranty</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!product" class="no-product-selected">
+      <div class="no-product-content">
+        <img src="https://via.placeholder.com/200x150?text=No+Product" alt="No product" class="no-product-image">
+        <h2>No Product Selected</h2>
+        <p>Please select a product from the list to view its details.</p>
+        <button class="btn primary" (click)="goBack()">
+          View All Products
+        </button>
+      </div>
+    </div>
+  `
+})
+export class ProductDetailsComponent {
+  @Input() product: any = null;
+
+  @Output() backToList = new EventEmitter<void>();
+  @Output() editProduct = new EventEmitter<any>();
+  @Output() deleteProduct = new EventEmitter<any>();
+
+  goBack() {
+    this.backToList.emit();
+  }
+
+  editCurrentProduct() {
+    if (this.product) {
+      this.editProduct.emit(this.product);
+    }
+  }
+
+  deleteCurrentProduct() {
+    if (this.product) {
+      this.deleteProduct.emit(this.product);
+    }
+  }
+
+  onImageLoadError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://via.placeholder.com/600x400?text=Product+Image+Not+Available';
+  }
+}

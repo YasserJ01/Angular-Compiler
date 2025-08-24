@@ -1,11 +1,15 @@
 package AST;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PrimaryType {
     Type_ type_;
     PredefinedType predefinedType;
     TypeReference typeReference;
     ObjectType objectType;
-    PrimaryType primaryType;
+    List<PrimaryType> primaryType = new ArrayList<PrimaryType>();
+
     TupleElementTypes tupleElementTypes;
     TypeQuery typeQuery;
     String This;
@@ -45,11 +49,11 @@ public class PrimaryType {
         this.objectType = objectType;
     }
 
-    public PrimaryType getPrimaryType() {
+    public List<PrimaryType> getPrimaryType() {
         return primaryType;
     }
 
-    public void setPrimaryType(PrimaryType primaryType) {
+    public void setPrimaryType(List<PrimaryType> primaryType) {
         this.primaryType = primaryType;
     }
 
@@ -96,48 +100,48 @@ public class PrimaryType {
     @Override
     public String toString() {
         if (type_ != null) {
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     type_ + '\n' +
                     '}';
         } else if (predefinedType != null) {
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     predefinedType + '\n' +
                     '}';
         } else if (typeReference != null) {
             if (primaryType != null && is != null) {
-                return "PrimaryType{" +'\n'+
+                return "PrimaryType{" + '\n' +
                         typeReference + '\n' +
                         "is=" + is + '\n' +
                         primaryType + '\n' +
                         '}';
             }
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     typeReference + '\n' +
                     '}';
         } else if (objectType != null) {
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     "objectType=" + objectType + '\n' +
                     '}';
         } else if (primaryType != null) {
             if (keyOf != null) {
-                return "PrimaryType{" +'\n'+
+                return "PrimaryType{" + '\n' +
                         primaryType + '\n' +
                         "keyOf=" + keyOf + '\n' +
                         '}';
             }
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     primaryType + '\n' +
                     '}';
         } else if (tupleElementTypes != null) {
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     "tupleElementTypes=" + tupleElementTypes + '\n' +
                     '}';
         } else if (typeQuery != null) {
-            return "PrimaryType{" +'\n'+
+            return "PrimaryType{" + '\n' +
                     "typeQuery=" + typeQuery + '\n' +
                     '}';
         }
-        return "PrimaryType{" +'\n'+
+        return "PrimaryType{" + '\n' +
                 "This=" + This + '\n' +
                 '}';
 
