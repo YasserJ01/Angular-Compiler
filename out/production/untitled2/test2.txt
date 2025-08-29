@@ -6,7 +6,7 @@ import { Product } from '../app.component';
   template: `
     <div class="product-details" *ngIf="item">
       <h1>{{item.name}}</h1>
-      <img [src]="item.imgSrc">
+      <img [src]="item.imgSrc"/>
       <p>{{item.price}}</p>
       <p>{{item.details}}</p>
     </div>
