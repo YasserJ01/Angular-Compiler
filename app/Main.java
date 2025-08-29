@@ -23,7 +23,7 @@ public class Main {
 //        String source = "DifferentTestsInOne.txt";
 //        String source = "product-list.txt";
 //        String source = "product-details.txt";
-        String source = "test1.txt";
+        String source = "test2.txt";
         CharStream cs = fromFileName(source);
         LexerFile lexer = new LexerFile(cs);
         CommonTokenStream token = new CommonTokenStream(lexer);

@@ -50,11 +50,17 @@ public class AngularGenerator {
             generate("\n<link rel=\"stylesheet\" href=\"generate.css\"/>", fw);
             generate("\n</head>", fw);
             generate("\n<body>\n", fw);
-            generate("\n<div id=\"app\"></div>\n\n", fw);
+            generate("\n<div id=\"app-root\"></div>", fw);
+            generate("\n<div id=\"app-product-details\"></div>", fw);
+            generate("\n<div id=\"app-product-list\"></div>\n\n", fw);
             generate("\n<script>\n", fw);
             if (program.getSourceElements() != null) {
                 generateSourceElement(program.getSourceElements(), Space, fw);
             }
+            generate("        const app = new AppComponent();\n",fw);
+            generate("        app.render();\n",fw);
+            generate("        new ProductDetailsComponent();\n",fw);
+            generate("        new ProductListComponent();\n",fw);
             generate("\n", fw);
             generate("\n</script>", fw);
             generate("\n</body>", fw);
@@ -94,109 +100,292 @@ public class AngularGenerator {
         if (classDeclaration.getIdentifier() != null && classDeclaration.getClassTail() != null) {
             generate("function " + classDeclaration.getIdentifier().getIdentifier() + "() {", fw);
             generate("\n", fw);
-
+            String componentName = classDeclaration.getIdentifier().getIdentifier();
             List<ClassElement> classElements = classDeclaration.getClassTail().getclassElement();
 
-            // Get the variable declaration for products array
-            VariableDeclaration productsVarDecl = classDeclaration.getClassTail().getclassElement().get(0)
-                    .getStatement().getVariableStatement().getVariableDeclarationList()
-                    .getVariableDeclaration().get(0);
+            if ("ProductDetailsComponent".equals(componentName)) {
+                generateProductDetailsComponent(classDeclaration, classElements, fw);
+            }else if ("ProductListComponent".equals(componentName)){
+                generateProductListComponent(classDeclaration, classElements, fw);
+            }else {
 
-            generate("    this." + productsVarDecl.getIdentifierOrKeyWord().getIdentifier().getIdentifier() + " = [", fw);
-            generate("\n", fw);
+                VariableDeclaration productsVarDecl = classDeclaration.getClassTail().getclassElement().get(0)
+                        .getStatement().getVariableStatement().getVariableDeclarationList()
+                        .getVariableDeclaration().get(0);
 
-            // Get the array literal containing all Product instances
-            ArrayLiteral productsArray = productsVarDecl.getSingleExpression().get(0).getArrayLiteral();
-            ElementList elementList = productsArray.getElementList();
+                generate("    this." + productsVarDecl.getIdentifierOrKeyWord().getIdentifier().getIdentifier() + " = [", fw);
+                generate("\n", fw);
 
-            // Get the primary type (should be "Product")
-            String primaryType = productsVarDecl.getTypeAnnotation().getType_()
-                    .getUnionOrIntersectionOrPrimaryType().getPrimaryType().getPrimaryType().get(0)
-                    .getTypeReference().getTypeName().getIdentifier().getIdentifier();
+                // Get the array literal containing all Product instances
+                ArrayLiteral productsArray = productsVarDecl.getSingleExpression().get(0).getArrayLiteral();
+                ElementList elementList = productsArray.getElementList();
 
-            // Loop through all array elements (each new Product() instance)
-            for (ArrayElement arrayElement : elementList.getArrayElement()) {
-                if (arrayElement.getSingleExpression() != null &&
-                        arrayElement.getSingleExpression().getObjectLiteral() != null) {
+                // Get the primary type (should be "Product")
+                String primaryType = productsVarDecl.getTypeAnnotation().getType_()
+                        .getUnionOrIntersectionOrPrimaryType().getPrimaryType().getPrimaryType().get(0)
+                        .getTypeReference().getTypeName().getIdentifier().getIdentifier();
 
-                    ObjectLiteral productObject = arrayElement.getSingleExpression().getObjectLiteral();
-                    List<PropertyAssignment> properties = productObject.getPropertyAssignment();
+                // Loop through all array elements (each new Product() instance)
+                for (ArrayElement arrayElement : elementList.getArrayElement()) {
+                    if (arrayElement.getSingleExpression() != null &&
+                            arrayElement.getSingleExpression().getObjectLiteral() != null) {
 
-                    // Generate: new Product(param1, param2, param3, param4, param5)
-                    generate("        new " + primaryType + "(", fw);
+                        ObjectLiteral productObject = arrayElement.getSingleExpression().getObjectLiteral();
+                        List<PropertyAssignment> properties = productObject.getPropertyAssignment();
 
-                    // Generate all parameters in order
-                    for (int i = 0; i < properties.size(); i++) {
-                        PropertyAssignment property = properties.get(i);
+                        // Generate: new Product(param1, param2, param3, param4, param5)
+                        generate("        new " + primaryType + "(", fw);
 
-                        if (i > 0) {
-                            generate(", ", fw); // Add comma between parameters
-                        }
+                        // Generate all parameters in order
+                        for (int i = 0; i < properties.size(); i++) {
+                            PropertyAssignment property = properties.get(i);
 
-                        // Extract the value based on its type
-                        SingleExpression valueExpression = property.getSingleExpression().get(0);
-                        if (valueExpression.getLiteral() != null) {
-                            if (valueExpression.getLiteral().getNumericLiteral() != null) {
-                                // Numeric value
-                                generate(valueExpression.getLiteral().getNumericLiteral().getDecimalLiteral(), fw);
-                            } else if (valueExpression.getLiteral().getStringLiteral() != null) {
-                                // String value - add quotes
-                                generate(valueExpression.getLiteral().getStringLiteral() , fw);
+                            if (i > 0) {
+                                generate(", ", fw); // Add comma between parameters
+                            }
+
+                            // Extract the value based on its type
+                            SingleExpression valueExpression = property.getSingleExpression().get(0);
+                            if (valueExpression.getLiteral() != null) {
+                                if (valueExpression.getLiteral().getNumericLiteral() != null) {
+                                    // Numeric value
+                                    generate(valueExpression.getLiteral().getNumericLiteral().getDecimalLiteral(), fw);
+                                } else if (valueExpression.getLiteral().getStringLiteral() != null) {
+                                    // String value - add quotes
+                                    generate(valueExpression.getLiteral().getStringLiteral(), fw);
+                                }
                             }
                         }
+
+                        generate("),", fw);
+                        generate("\n", fw);
                     }
-
-                    generate("),", fw);
-                    generate("\n", fw);
                 }
-            }
-            //choosenproduct
-            String proprtyName = classDeclaration.getClassTail().getclassElement().get(1).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier();
-            //products
-            String proprtyName1 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier();
-            //productId
-            String proprtyAssignemnt1 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
-            generate("    ];", fw);
-            generate("\n", fw);
-            generate("     this." + proprtyName + " = " + classDeclaration.getClassTail().getclassElement().get(1).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getSingleExpression().getIdentifierName().getReservedWord().getNullLiteral() + "; \n" ,fw);
-            generate("}", fw);
-            generate("\n\n", fw);
-            generate(classDeclaration.getIdentifier().getIdentifier()+"."+proprtyName+" = "+"function("+proprtyAssignemnt1+") { \n ",fw);
-            generate("     this."+ proprtyName + " = "+proprtyAssignemnt1+"; \n",fw);
-            generate("     this.render(); \n",fw);
-            generate("     ProductDetailsComponent.prototype.render(this."+proprtyName1+"[this."+proprtyAssignemnt1+"]); \n",fw);
-            generate("}; \n",fw);
-            generate(classDeclaration.getIdentifier().getIdentifier()+".prototype.render = function() {\n",fw);
-            generate("    const container = document.getElementById("+classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getSingleExpression().get(0).getLiteral().getStringLiteral()+"); \n",fw);
-            generate("    container.innerHTML = ''; \n",fw);
 
+                //choosenproduct
+                String proprtyName = classDeclaration.getClassTail().getclassElement().get(1).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier();
+                //products
+                String proprtyName1 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier();
+                //productId
+                String proprtyAssignemnt1 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
+                //div
+                String htmlTagStartName = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlTagStartName().getHtmlTagName().getIdentifier();
+                //button
+                String htmlTagStartName1 = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlTagStartName().getHtmlTagName().getIdentifier();
+                //ngfor
+                String angularDirective = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlAttribute().get(0).getHtmlAttributeName().getAngularDirective();
+                generate("    ];", fw);
+                generate("    ];", fw);
+                generate("\n", fw);
+                generate("     this." + proprtyName + " = " + classDeclaration.getClassTail().getclassElement().get(1).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getSingleExpression().getIdentifierName().getReservedWord().getNullLiteral() + "; \n", fw);
+                generate("}", fw);
+                generate("\n\n", fw);
+
+                generate(classDeclaration.getIdentifier().getIdentifier() + ".prototype.setChoosenProduct = " + "function(" + proprtyAssignemnt1 + ") { \n ", fw);
+                generate("     this." + proprtyName + " = " + proprtyAssignemnt1 + "; \n", fw);
+                generate("     this.render(); \n", fw);
+                generate("     ProductDetailsComponent.prototype.render(this." + proprtyName1 + "[this." + proprtyName + "]); \n", fw);
+                generate("}; \n", fw);
+                generate("\n", fw);
+
+                // Generate the render method
+                generate(classDeclaration.getIdentifier().getIdentifier() + ".prototype.render = function() {\n", fw);
+                generate("    const container = document.getElementById(" + classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getSingleExpression().get(0).getLiteral().getStringLiteral() + "); \n", fw);
+                generate("    container.innerHTML = ''; \n", fw);
+                generate("\n", fw);
+
+                if (angularDirective != null) {
+                    generate("    for (const item of this." + proprtyName1 + ") {\n", fw);
+                    generate("        const " + htmlTagStartName1 + " = document.createElement('" + htmlTagStartName1 + "');\n", fw);
+                    generate("\n", fw);
+                    generate("        " + htmlTagStartName1 + ".onclick = () => this." + proprtyName + "(item." + proprtyAssignemnt1 + ");\n", fw);
+                    generate("\n", fw);
+                    generate("        // <app-product-list [data]=\"item\"></app-product-list> conversion\n", fw);
+                    generate("        const productList = document.createElement('" + htmlTagStartName + "');\n", fw);
+                    generate("        productList.innerHTML = ProductListComponent.prototype.render(item);\n", fw);
+                    generate("        " + htmlTagStartName1 + ".appendChild(productList);\n", fw);
+                    generate("\n", fw);
+                    generate("        container.appendChild(" + htmlTagStartName1 + ");\n", fw);
+                    generate("    }\n", fw);
+                    generate("};\n", fw);
+                }
+
+            }
         }
     }
 
-//    private void generateClassDeclaration(ClassDeclaration classDeclaration, String s, FileWriter fw) {
-//        if (classDeclaration.getIdentifier() != null && classDeclaration.getClassTail() != null) {
-//            generate("function " + classDeclaration.getIdentifier().getIdentifier() + "() {", fw);
-//            generate("\n", fw);
-//            List<ClassElement> classElements = classDeclaration.getClassTail().getclassElement();
-//            generate("    this." + classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier() + " = [", fw);
-//            generate("\n", fw);
-//            String primaryType = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getTypeAnnotation().getType_().getUnionOrIntersectionOrPrimaryType().getPrimaryType().getPrimaryType().get(0).getTypeReference().getTypeName().getIdentifier().getIdentifier();
-//            String numberLiteral = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getSingleExpression().get(0).getLiteral().getNumericLiteral().getDecimalLiteral();
-//            String stringLiteral = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getLiteral().getStringLiteral();
-//            String stringLiteral2 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(2).getSingleExpression().get(0).getLiteral().getStringLiteral();
-//            String stringLiteral3 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(3).getSingleExpression().get(0).getLiteral().getStringLiteral();
-//            String stringLiteral4 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(4).getSingleExpression().get(0).getLiteral().getStringLiteral();
-//
-////                if (classDeclaration.getClassTail().getclassElement() != null) {
-////                    generateClassElement(classDeclaration.getClassTail().getclassElement().get(0), s, fw);
-////                }
-//                generate("        new " + primaryType + "(" + numberLiteral + " , " + stringLiteral + stringLiteral2 + stringLiteral3 + stringLiteral4 +  ")," ,fw);
-//                generate("\n", fw);
-//            }
-//            generate("    ];", fw);
-//        }
+    private void generateProductDetailsComponent(ClassDeclaration classDeclaration, List<ClassElement> classElements, FileWriter fw) {
+        //ngIf*
+        String angularDirective = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlAttribute().get(1).getHtmlAttributeName().getAngularDirective();
+        //item
+        String item=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
 
+        // Initialize the component
+        generate("    this."+item+" = null;", fw);
+        generate("\n", fw);
+        generate("}", fw);
+        generate("\n\n", fw);
 
+        // Generate render method
+        String selector = getComponentSelector(classDeclaration);
+
+        generate("ProductDetailsComponent.prototype.render = function("+item+") {", fw);
+        generate("\n", fw);
+        generate("    this."+item+" = "+item+";", fw);
+        generate("\n", fw);
+        generate("    const container = document.getElementById(" + selector + ");", fw);
+        generate("\n", fw);
+        generate("    container.innerHTML = '';", fw);
+        generate("\n\n", fw);
+        generate("    if (!this."+item+") {", fw);
+        generate("\n", fw);
+        generate("        return;", fw);
+        generate("\n", fw);
+        generate("    }", fw);
+        generate("\n", fw);
+        String htmlTagStartName = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlTagStartName().getHtmlTagName().getIdentifier();
+        String className = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlAttribute().get(0).getHtmlAttributeValue().getStringLiteral();
+        //h1
+        String htmlTagStartName1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlTagStartName().getHtmlTagName().getIdentifier();
+        //img
+        String htmlTagStartName2=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlTagName().getIdentifier();
+        //src
+        String htmlAttribute=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlAttribute().get(0).getHtmlAttributeName().getIdentifiers().get(0);
+        //price
+        String htmlAttribute1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(2).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier();
+        //details
+        String htmlAtrribute2=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(3).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier();
+        //p number 1
+        String htmlTagName=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(2).getHtmlTagStartName().getHtmlTagName().getIdentifier();
+        //p number 2
+        String htmlTagName1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(3).getHtmlTagStartName().getHtmlTagName().getIdentifier();
+
+        if (angularDirective != null) {
+            if (htmlTagStartName != null) {
+                generate("    const " + htmlTagStartName + " = document.createElement('" + htmlTagStartName + "');", fw);
+                generate("\n", fw);
+                generate("    " + htmlTagStartName + ".className = " + className + ";", fw);
+                generate("\n", fw);
+
+            }
+        }
+        String interpolationExpression = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().toString()/*getHtmlAttribute().get(0).getHtmlAttributeName().getAngularDirective()*/;
+        if (interpolationExpression != null) {
+            generate("    const "+htmlTagStartName1+" = document.createElement('"+htmlTagStartName1+"');", fw);
+            generate("\n", fw);
+            generate("    "+htmlTagStartName1+".textContent = this."+classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getPropertyName().getIdentifierName().getIdentifier().getIdentifier()+"."+classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier()+";", fw);
+            generate("\n", fw);
+        }
+        //name
+        String name=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier();
+        if (htmlTagStartName2 != null) {
+            if (htmlAttribute != null) {
+                generate("    const "+htmlTagStartName2+" = document.createElement('"+htmlTagStartName2+"');", fw);
+                generate("\n", fw);
+                generate("    "+htmlTagStartName2+"."+htmlAttribute+" = this."+item+".imgSrc;", fw);
+                generate("\n", fw);
+                generate("    "+htmlTagStartName2+".alt = this."+item+"."+name+";", fw);
+                generate("\n\n", fw);
+            }
+        }
+        generate("\n", fw);
+        generate("    const "+htmlAttribute1+" = document.createElement('"+htmlTagName+"');", fw);
+        generate("\n", fw);
+        generate("    "+htmlAttribute1+".textContent = `Price: $${this."+item+"."+htmlAttribute1+"}`;", fw);
+        generate("\n\n", fw);
+
+        generate("    // {{item.details}} conversion", fw);
+        generate("\n", fw);
+        generate("    const "+htmlAtrribute2+" = document.createElement('"+htmlTagName1+"');", fw);
+        generate("\n", fw);
+        generate("    "+htmlAtrribute2+".textContent = this."+item+"."+htmlAtrribute2+";", fw);
+        generate("\n\n", fw);
+
+        generate("    "+htmlTagStartName+".appendChild("+htmlTagStartName1+");", fw);
+        generate("\n", fw);
+        generate("    "+htmlTagStartName+".appendChild("+htmlTagStartName2+");", fw);
+        generate("\n", fw);
+        generate("    "+htmlTagStartName+".appendChild("+htmlAttribute1+");", fw);
+        generate("\n", fw);
+        generate("    "+htmlTagStartName+".appendChild("+htmlAtrribute2+");", fw);
+        generate("\n\n", fw);
+        generate("    container.appendChild("+htmlTagStartName+");", fw);
+        generate("\n", fw);
+        generate("};", fw);
+        generate("\n", fw);
+
+    }
+    //TODO: h1,img,div in one "for" loop maybe ?
+    //TODO: one sample for all html elements maybe ?
+    //TODO: one sample for components in one for loop maybe ?
+    //TODO: one sample for html contents maybe ?
+    //TODO: implement the html attribute,tag of the same html content/element maybe ?
+
+    private void generateProductListComponent(ClassDeclaration classDeclaration, List<ClassElement> classElements, FileWriter fw) {
+        //ProductListComponent
+        String componentClass = classDeclaration.getIdentifier().getIdentifier();
+        //data
+        String componentClassProperty = classDeclaration.getClassTail().getclassElement().get(0).getPropertyMemberDeclaration().getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
+        //TODO: null statement
+        generate("    this."+componentClassProperty+" = null;", fw);
+        generate("\n", fw);
+        generate("}", fw);
+        generate("\n\n", fw);
+
+        //div
+        String htmlTagStartName = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlTagStartName().getHtmlTagName().getIdentifier();
+        //h1
+        String htmlTagStartName1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlTagStartName().getHtmlTagName().getIdentifier();
+        //img
+        String htmlTagName=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlTagName().getIdentifier();
+        //src
+        String htmlAttribute=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlAttribute().get(0).getHtmlAttributeName().getIdentifiers().get(0);
+        //src
+        String htmlAttributeValue=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlAttribute().get(0).getHtmlAttributeValue().getStringLiteral();
+
+        generate(componentClass+".prototype.render = function("+componentClassProperty+") {", fw);
+        generate("\n", fw);
+        generate("    this."+componentClassProperty+" = "+componentClassProperty+";", fw);
+        generate("\n", fw);
+        generate("    const "+htmlTagStartName+" = document.createElement('"+htmlTagStartName+"');", fw);
+        generate("\n\n", fw);
+        generate("\n", fw);
+        generate("    const "+htmlTagStartName1+" = document.createElement('"+htmlTagStartName1+"');", fw);
+        generate("\n", fw);
+        generate("    "+htmlTagStartName1+".textContent = this."+componentClassProperty+".name;", fw);
+        generate("\n\n", fw);
+
+        generate("\n", fw);
+        generate("    const "+htmlTagName+" = document.createElement('"+htmlTagName+"');", fw);
+        generate("\n", fw);
+        //TODO : CUT THE " " FROM THE imgSrc STRING
+        generate("    "+htmlTagName+"."+htmlAttribute+" = this."+componentClassProperty+".imgSrc;", fw);
+        generate("\n", fw);
+        generate("    "+htmlTagName+".alt = this."+componentClassProperty+".name;", fw);
+        generate("\n\n", fw);
+
+        generate("    "+htmlTagStartName+".appendChild("+htmlTagStartName1+");", fw);
+        generate("\n", fw);
+        generate("    "+htmlTagStartName+".appendChild("+htmlTagName+");", fw);
+        generate("\n\n", fw);
+
+        generate("    return "+htmlTagStartName+".outerHTML;", fw);
+        generate("\n", fw);
+        generate("};", fw);
+        generate("\n", fw);
+    }
+
+    private String getComponentSelector(ClassDeclaration classDeclaration) {
+        try {
+            return classDeclaration.getDecoratorList().getDecorator().get(0)
+                    .getDecoratorCallExpression().getArguments().getArgumentList()
+                    .getArgument().get(0).getSingleExpression().getObjectLiteral()
+                    .getPropertyAssignment().get(0).getSingleExpression().get(0)
+                    .getLiteral().getStringLiteral();
+        } catch (Exception e) {
+            return "'app-root'"; // default selector
+        }
+    }
     private void generateClassElement(ClassElement classElement, String s, FileWriter fw) {
         if (classElement.getStatement() != null) {
             generateStatement(classElement.getStatement(), s, fw);
@@ -409,32 +598,6 @@ public class AngularGenerator {
             generateSingleExpression(arrayElement.getSingleExpression(), s, fw, "", "", false);
         }
     }
-
-    //    private void generateSingleExpression(SingleExpression singleExpression, String s, FileWriter fw , String name,String attribute,boolean hasContent) {
-//        String test = "";
-//        if (singleExpression.getSingleExpression() != null && singleExpression.getExpressionSequence() != null && !name.isEmpty()) {
-//            generate("(",fw);
-//            hasSquareBracket = true;
-//        }
-//
-//        if (singleExpression.getSingleExpression() != null && singleExpression.getIdentifierName() != null) {
-//            if (singleExpression.getIdentifierName().getReservedWord() == null && hasContent){
-//                generate(name,fw);
-//            }
-//            SingleExpression singleExpressions = singleExpression.getSingleExpression();
-//
-//                if (singleExpressions.getIdentifier() != null && singleExpression.getIdentifierName().getIdentifier() == null) {
-//                    if (hasContent) {
-//                        generate(".textContent = ", fw);
-//                    }
-//                    else {
-//                        generate("",fw);
-//                        attribute = "";
-//                    }
-//                }
-//        }
-//
-//    }
     private void generateIdentifierName(IdentifierName identifierName, String s, FileWriter fw, String name) {
         if (identifierName.getReservedWord() != null) {
             generateReservedWord(identifierName.getReservedWord(), s, fw, name);

@@ -14,25 +14,15 @@
   function deleteProduct(id){ state.products=state.products.filter(function(x){return String(x.id)!==String(id)}); save(state.products); renderList(); }
 function renderProductList(host, scope){
   host.innerHTML='';
-  (scope.products||[]).forEach(function(product){
+  (scope.items||[]).forEach(function(item){
     var card=document.createElement('div'); card.className='product';
-    var img=document.createElement('img'); img.src=(product.image)||'https://via.placeholder.com/400x300?text=No+Image'; img.alt=(''+(product.name||'')); card.appendChild(img);
     var content=document.createElement('div'); content.className='content';
-    var h3=document.createElement('h3'); h3.textContent=(''+(product.name||'')); content.appendChild(h3);
-    card.addEventListener('click', function(){ host.dispatchEvent(new CustomEvent('selectedProduct',{detail:product})); });
     card.appendChild(content);
     host.appendChild(card);
   });
 }
 function renderProductDetails(host, scope){
   host.innerHTML='';
-  if(scope.product){
-    var img=document.createElement('img'); img.src=(scope.product && scope.product.image)||'https://via.placeholder.com/800x500?text=No+Image'; img.alt=(''+(scope.product?scope.product.name:'')); img.style.width='100%'; img.style.maxHeight='360px'; img.style.objectFit='cover'; host.appendChild(img);
-    var h2=document.createElement('h2'); h2.textContent=(''+(scope.product?scope.product.name:'')); host.appendChild(h2);
-    var p=document.createElement('p'); p.textContent=(''+(scope.product?scope.product.details:'')); host.appendChild(p);
-  } else {
-    var msg=document.createElement('p'); msg.textContent='Please select a product.'; host.appendChild(msg);
-  }
 }
   function renderList(){ var host=document.getElementById('listHost'); if(!host) return;
     host.onselected = function(ev){ state.product=ev.detail; renderDetails(); show('details'); };

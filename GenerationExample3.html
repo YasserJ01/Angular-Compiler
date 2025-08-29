@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Angular to HTML Conversion</title>
+  <style>
+        .product-details {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background: #e0e0e0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="app-root"></div>
+<div id="app-product-details"></div>
+<div id="app-product-list"></div>
+
+<script>
+        // ProductListComponent implementation
+        function ProductListComponent() {
+            this.data = null;
+        }
+
+        ProductListComponent.prototype.render = function(data) {
+            this.data = data;
+            const div = document.createElement('div');
+
+            // {{data.name}} conversion
+            const h1 = document.createElement('h1');
+            h1.textContent = this.data.name;
+
+            // [src]="data.imgSrc" conversion
+            const img = document.createElement('img');
+            img.src = this.data.imgSrc;
+            img.alt = this.data.name;
+
+            div.appendChild(h1);
+            div.appendChild(img);
+
+            return div.outerHTML;
+        };
+
+        // Initialize the application
+        const app = new AppComponent();
+        app.render();
+        // Initialize other components
+        new ProductDetailsComponent();
+        new ProductListComponent();
+    </script>
+</body>
+</html>

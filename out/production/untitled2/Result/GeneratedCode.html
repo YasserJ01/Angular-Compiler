@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>React App</title>
+<link rel="stylesheet" href="generate.css"/>
+</head>
+<body>
+
+<div id="app-root"></div>
+<div id="app-product-details"></div>
+<div id="app-product-list"></div>
+
+
+<script>
+function ProductDetailsComponent() {
+    this.item = null;
+}
+
+ProductDetailsComponent.prototype.render = function(item) {
+    this.item = item;
+    const container = document.getElementById('app-product-details');
+    container.innerHTML = '';
+
+    if (!this.item) {
+        return;
+    }
+    const div = document.createElement('div');
+    div.className = "product-details";
+    const h1 = document.createElement('h1');
+    h1.textContent = this.item.name;
+    const img = document.createElement('img');
+    img.src = this.item.imgSrc;
+    img.alt = this.item.name;
+
+    // {{item.price}} conversion
+    const price = document.createElement('p');
+    price.textContent = `Price: $${this.item.price}`;
+
+    // {{item.details}} conversion
+    const details = document.createElement('p');
+    details.textContent = this.item.details;
+
+    div.appendChild(h1);
+    div.appendChild(img);
+    div.appendChild(price);
+    div.appendChild(details);
+
+    container.appendChild(div);
+};
+        const app = new AppComponent();
+        app.render();
+        new ProductDetailsComponent();
+        new ProductListComponent();
+
+
+</script>
+</body>
+</html>
