@@ -9,6 +9,7 @@ import CodeGen.AngularToVanilla;
 import gen.LexerFile;
 import gen.ParserFile;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import java.io.IOException;
@@ -23,8 +24,17 @@ public class Main {
 //        String source = "DifferentTestsInOne.txt";
 //        String source = "product-list.txt";
 //        String source = "product-details.txt";
-        String source = "test2.txt";
-        CharStream cs = fromFileName(source);
+//        String source = "product-details.txt";
+//        CharStream cs = fromFileName(source);
+        String[] sources = {"test1.txt", "test2.txt", "test3.txt"};
+
+        StringBuilder combined = new StringBuilder();
+        for (String s : sources) {
+            combined.append(java.nio.file.Files.readString(java.nio.file.Path.of(s)));
+            combined.append("\n");          // keep them separated
+        }
+
+        CharStream cs = CharStreams.fromString(combined.toString());
         LexerFile lexer = new LexerFile(cs);
         CommonTokenStream token = new CommonTokenStream(lexer);
         ParserFile parser = new ParserFile(token);
@@ -33,8 +43,10 @@ public class Main {
         Program doc = (Program) baseVisitor.visit(tree);
 
         System.out.println(doc);
-        AngularGenerator generator = new AngularGenerator();
-        generator.generate(doc);
+//        AngularGenerator generator = new AngularGenerator();
+//        generator.generate(doc);
+        new AngularGenerator().generate(doc);
+
 //        try {
 //            // AST-independent demo generator (static)
 ////            new CodeGenerator().generate();

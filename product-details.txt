@@ -13,12 +13,12 @@ import { CommonModule } from '@angular/common';
         <p>{{ product.details }}</p>
       </div>
       <div *ngIf="!product">
-        <p>Please select a product to view detailss.</p>
+        <p>Please select a product to view details.</p>
       </div>
     `,
 })
 export class ProductDetailsComponent {
-  @Input() product: any;
+  @Input() productt: any;
 }
 
 

@@ -26,11 +26,11 @@ public class BaseVisitor extends ParserFileBaseVisitor {
             program.setSourceElements(visitSourceElements(ctx.sourceElements()));
         }
 
-//        System.out.println("SymbolTable");
-//        System.out.println("..........................................................");
-//
-//        this.symbolTable.printSymbolTable();
-//        System.out.println("===========================================================");
+        System.out.println("SymbolTable");
+        System.out.println("..........................................................");
+
+        this.symbolTable.printSymbolTable();
+        System.out.println("===========================================================");
 
 
         SemanticCheck semanticCheck = new SemanticCheck();

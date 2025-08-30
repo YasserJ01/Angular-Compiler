@@ -10,43 +10,57 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 
 public class AngularGenerator {
-    int counter = 0;
-    String rootName = "";
-    boolean firstComponent = true;
-    boolean isVisitUseState = true;
-    boolean noRepeatDot = false;
-    boolean hasMap = false;
     boolean hasSquareBracket = false;
-    String rootComponent = "";
-    boolean onlyOne = true;
-    boolean standard = false;
-    int sizeOfObject = 0;
-    int counterForObject = 0;
-    boolean haveProps = false;
-    Map<String, String> map = new HashMap<>();
     private boolean isGeneratingInterface = false;
     private List<String> interfaceProperties = new ArrayList<>();
     private String currentInterfaceName = "";
 
+    // Helper classes for dynamic HTML generation
+    private static class HtmlElement {
+        String tagName;
+        String className;
+        Map<String, String> attributes = new HashMap<>();
+        List<HtmlElement> children = new ArrayList<>();
+        String textContent;
+        String interpolation;
+        boolean isSelfClosing;
+
+        public HtmlElement(String tagName) {
+            this.tagName = tagName;
+        }
+    }
+
+    private static class ComponentInfo {
+        String name;
+        String selector;
+        List<String> properties = new ArrayList<>();
+        Map<String, String> propertyTypes = new HashMap<>();
+        HtmlElement template;
+
+        public ComponentInfo(String name, String selector) {
+            this.name = name;
+            this.selector = selector;
+        }
+    }
 
     public void generate(Program program) {
         String Space = "\t\t";
 
-        File source = new File("Result\\style.css");
-        File dest = new File("Result\\generate.css");
-        try {
-            FileUtils.copyFile(source, dest);
-            System.out.println("File copied successfully.");
-        } catch (IOException e) {
-            System.err.println("An error occurred: " + e.getMessage());
-        }
+//        File source = new File("Result\\style.css");
+//        File dest = new File("Result\\generate.css");
+//        try {
+////            FileUtils.copyFile(source, dest);
+//            System.out.println("File copied successfully.");
+//        } catch (IOException e) {
+//            System.err.println("An error occurred: " + e.getMessage());
+//        }
 
         try {
             FileWriter fw = new FileWriter("Result\\GeneratedCode.html");
             generate("<!DOCTYPE html>", fw);
             generate("\n<html>", fw);
             generate("\n<head>", fw);
-            generate("\n<title>React App</title>", fw);
+            generate("\n<title>Angular App</title>", fw);
             generate("\n<link rel=\"stylesheet\" href=\"generate.css\"/>", fw);
             generate("\n</head>", fw);
             generate("\n<body>\n", fw);
@@ -57,10 +71,10 @@ public class AngularGenerator {
             if (program.getSourceElements() != null) {
                 generateSourceElement(program.getSourceElements(), Space, fw);
             }
-            generate("        const app = new AppComponent();\n",fw);
-            generate("        app.render();\n",fw);
-            generate("        new ProductDetailsComponent();\n",fw);
-            generate("        new ProductListComponent();\n",fw);
+            generate("        const app = new AppComponent();\n", fw);
+            generate("        app.render();\n", fw);
+            generate("        new ProductDetailsComponent();\n", fw);
+            generate("        new ProductListComponent();\n", fw);
             generate("\n", fw);
             generate("\n</script>", fw);
             generate("\n</body>", fw);
@@ -96,283 +110,603 @@ public class AngularGenerator {
         }
     }
 
-    private void generateClassDeclaration(ClassDeclaration classDeclaration, String s, FileWriter fw) {
-        if (classDeclaration.getIdentifier() != null && classDeclaration.getClassTail() != null) {
-            generate("function " + classDeclaration.getIdentifier().getIdentifier() + "() {", fw);
-            generate("\n", fw);
-            String componentName = classDeclaration.getIdentifier().getIdentifier();
-            List<ClassElement> classElements = classDeclaration.getClassTail().getclassElement();
+    private HtmlElement extractHtmlElement(AST.HtmlElement htmlElement) {
+        if (htmlElement == null) return null;
 
-            if ("ProductDetailsComponent".equals(componentName)) {
-                generateProductDetailsComponent(classDeclaration, classElements, fw);
-            }else if ("ProductListComponent".equals(componentName)){
-                generateProductListComponent(classDeclaration, classElements, fw);
-            }else {
+        String tagName = extractTagName(htmlElement);
+        if (tagName == null || tagName.isEmpty()) {
+            return null; // Skip elements without valid tag names
+        }
 
-                VariableDeclaration productsVarDecl = classDeclaration.getClassTail().getclassElement().get(0)
-                        .getStatement().getVariableStatement().getVariableDeclarationList()
-                        .getVariableDeclaration().get(0);
+        HtmlElement element = new HtmlElement(tagName);
 
-                generate("    this." + productsVarDecl.getIdentifierOrKeyWord().getIdentifier().getIdentifier() + " = [", fw);
-                generate("\n", fw);
-
-                // Get the array literal containing all Product instances
-                ArrayLiteral productsArray = productsVarDecl.getSingleExpression().get(0).getArrayLiteral();
-                ElementList elementList = productsArray.getElementList();
-
-                // Get the primary type (should be "Product")
-                String primaryType = productsVarDecl.getTypeAnnotation().getType_()
-                        .getUnionOrIntersectionOrPrimaryType().getPrimaryType().getPrimaryType().get(0)
-                        .getTypeReference().getTypeName().getIdentifier().getIdentifier();
-
-                // Loop through all array elements (each new Product() instance)
-                for (ArrayElement arrayElement : elementList.getArrayElement()) {
-                    if (arrayElement.getSingleExpression() != null &&
-                            arrayElement.getSingleExpression().getObjectLiteral() != null) {
-
-                        ObjectLiteral productObject = arrayElement.getSingleExpression().getObjectLiteral();
-                        List<PropertyAssignment> properties = productObject.getPropertyAssignment();
-
-                        // Generate: new Product(param1, param2, param3, param4, param5)
-                        generate("        new " + primaryType + "(", fw);
-
-                        // Generate all parameters in order
-                        for (int i = 0; i < properties.size(); i++) {
-                            PropertyAssignment property = properties.get(i);
-
-                            if (i > 0) {
-                                generate(", ", fw); // Add comma between parameters
-                            }
-
-                            // Extract the value based on its type
-                            SingleExpression valueExpression = property.getSingleExpression().get(0);
-                            if (valueExpression.getLiteral() != null) {
-                                if (valueExpression.getLiteral().getNumericLiteral() != null) {
-                                    // Numeric value
-                                    generate(valueExpression.getLiteral().getNumericLiteral().getDecimalLiteral(), fw);
-                                } else if (valueExpression.getLiteral().getStringLiteral() != null) {
-                                    // String value - add quotes
-                                    generate(valueExpression.getLiteral().getStringLiteral(), fw);
-                                }
-                            }
-                        }
-
-                        generate("),", fw);
-                        generate("\n", fw);
+        // Extract attributes
+        if (htmlElement.getHtmlAttribute() != null) {
+            for (HtmlAttribute attr : htmlElement.getHtmlAttribute()) {
+                if (attr != null && attr.getHtmlAttributeName() != null) {
+                    String attrName = extractAttributeName(attr.getHtmlAttributeName());
+                    String attrValue = extractAttributeValue(attr.getHtmlAttributeValue());
+                    if (attrName != null && !attrName.isEmpty()) {
+                        element.attributes.put(attrName, attrValue != null ? attrValue : "");
                     }
                 }
+            }
+        }
 
-                //choosenproduct
-                String proprtyName = classDeclaration.getClassTail().getclassElement().get(1).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier();
-                //products
-                String proprtyName1 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getIdentifierOrKeyWord().getIdentifier().getIdentifier();
-                //productId
-                String proprtyAssignemnt1 = classDeclaration.getClassTail().getclassElement().get(0).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getArrayLiteral().getElementList().getArrayElement().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
-                //div
-                String htmlTagStartName = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlTagStartName().getHtmlTagName().getIdentifier();
-                //button
-                String htmlTagStartName1 = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlTagStartName().getHtmlTagName().getIdentifier();
-                //ngfor
-                String angularDirective = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlAttribute().get(0).getHtmlAttributeName().getAngularDirective();
-                generate("    ];", fw);
-                generate("    ];", fw);
-                generate("\n", fw);
-                generate("     this." + proprtyName + " = " + classDeclaration.getClassTail().getclassElement().get(1).getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().get(0).getSingleExpression().get(0).getSingleExpression().getIdentifierName().getReservedWord().getNullLiteral() + "; \n", fw);
-                generate("}", fw);
-                generate("\n\n", fw);
+        // Extract children and content
+        if (htmlElement.getHtmlContent() != null) {
+            extractHtmlContent(htmlElement.getHtmlContent(), element);
+        }
 
-                generate(classDeclaration.getIdentifier().getIdentifier() + ".prototype.setChoosenProduct = " + "function(" + proprtyAssignemnt1 + ") { \n ", fw);
-                generate("     this." + proprtyName + " = " + proprtyAssignemnt1 + "; \n", fw);
-                generate("     this.render(); \n", fw);
-                generate("     ProductDetailsComponent.prototype.render(this." + proprtyName1 + "[this." + proprtyName + "]); \n", fw);
-                generate("}; \n", fw);
-                generate("\n", fw);
+        return element;
+    }
 
-                // Generate the render method
-                generate(classDeclaration.getIdentifier().getIdentifier() + ".prototype.render = function() {\n", fw);
-                generate("    const container = document.getElementById(" + classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(0).getSingleExpression().get(0).getLiteral().getStringLiteral() + "); \n", fw);
-                generate("    container.innerHTML = ''; \n", fw);
-                generate("\n", fw);
+    // Helper method to safely extract tag name from different HTML element structures
+    private String extractTagName(AST.HtmlElement htmlElement) {
+        if (htmlElement == null) return null;
 
-                if (angularDirective != null) {
-                    generate("    for (const item of this." + proprtyName1 + ") {\n", fw);
-                    generate("        const " + htmlTagStartName1 + " = document.createElement('" + htmlTagStartName1 + "');\n", fw);
-                    generate("\n", fw);
-                    generate("        " + htmlTagStartName1 + ".onclick = () => this." + proprtyName + "(item." + proprtyAssignemnt1 + ");\n", fw);
-                    generate("\n", fw);
-                    generate("        // <app-product-list [data]=\"item\"></app-product-list> conversion\n", fw);
-                    generate("        const productList = document.createElement('" + htmlTagStartName + "');\n", fw);
-                    generate("        productList.innerHTML = ProductListComponent.prototype.render(item);\n", fw);
-                    generate("        " + htmlTagStartName1 + ".appendChild(productList);\n", fw);
-                    generate("\n", fw);
-                    generate("        container.appendChild(" + htmlTagStartName1 + ");\n", fw);
-                    generate("    }\n", fw);
-                    generate("};\n", fw);
+        // Try to get tag name from HtmlTagStartName
+        if (htmlElement.getHtmlTagStartName() != null &&
+                htmlElement.getHtmlTagStartName().getHtmlTagName() != null) {
+            return htmlElement.getHtmlTagStartName().getHtmlTagName().getIdentifier();
+        }
+
+        // Try to get tag name from HtmlTagName (for self-closing tags)
+        if (htmlElement.getHtmlTagName() != null) {
+            return htmlElement.getHtmlTagName().getIdentifier();
+        }
+
+        // If no tag name found, return a default or null
+        return null;
+    }
+
+    private void extractHtmlContent(HtmlContent htmlContent, HtmlElement parent) {
+        if (htmlContent == null || parent == null) return;
+
+        if (htmlContent.getHtmlElement() != null) {
+            for (AST.HtmlElement childElement : htmlContent.getHtmlElement()) {
+                if (childElement != null) {
+                    HtmlElement child = extractHtmlElement(childElement);
+                    if (child != null) {
+                        parent.children.add(child);
+                    }
                 }
+            }
+        }
 
+        if (htmlContent.getInterpolationExpressions() != null) {
+            // Handle interpolation expressions like {{item.name}}
+            for (InterpolationExpression interp : htmlContent.getInterpolationExpressions()) {
+                if (interp != null) {
+                    String interpolation = extractInterpolationExpression(interp);
+                    if (interpolation != null && !interpolation.isEmpty()) {
+                        parent.interpolation = interpolation;
+                    }
+                }
             }
         }
     }
 
-    private void generateProductDetailsComponent(ClassDeclaration classDeclaration, List<ClassElement> classElements, FileWriter fw) {
-        //ngIf*
-        String angularDirective = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlAttribute().get(1).getHtmlAttributeName().getAngularDirective();
-        //item
-        String item=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
+    private String extractAttributeName(HtmlAttributeName attributeName) {
+        if (attributeName.getAngularDirective() != null) {
+            return attributeName.getAngularDirective();
+        }
+        if (attributeName.getIdentifiers() != null && !attributeName.getIdentifiers().isEmpty()) {
+            return attributeName.getIdentifiers().get(0);
+        }
+        return "";
+    }
 
-        // Initialize the component
-        generate("    this."+item+" = null;", fw);
+    private String extractAttributeValue(HtmlAttributeValue attributeValue) {
+        if (attributeValue != null && attributeValue.getStringLiteral() != null) {
+            return attributeValue.getStringLiteral();
+        }
+        return "";
+    }
+
+    private String extractInterpolationExpression(InterpolationExpression interp) {
+        if (interp == null) return null;
+
+        if (interp.getHtmlSequence() != null) {
+            HtmlSequence seq = interp.getHtmlSequence();
+            if (seq.getPropertyName() != null &&
+                    seq.getPropertyName().getIdentifierName() != null &&
+                    seq.getPropertyName().getIdentifierName().getIdentifier() != null &&
+                    seq.getIdentifierName() != null &&
+                    seq.getIdentifierName().getIdentifier() != null) {
+
+                String obj = seq.getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
+                String prop = seq.getIdentifierName().getIdentifier().getIdentifier();
+                return obj + "." + prop;
+            } else if (seq.getIdentifierName() != null &&
+                    seq.getIdentifierName().getIdentifier() != null) {
+                return seq.getIdentifierName().getIdentifier().getIdentifier();
+            }
+        }
+        return null;
+    }
+
+    // Dynamic component info extraction
+    private ComponentInfo extractComponentInfo(ClassDeclaration classDeclaration) {
+        if (classDeclaration == null || classDeclaration.getIdentifier() == null) {
+            return null;
+        }
+
+        String componentName = classDeclaration.getIdentifier().getIdentifier();
+        String selector = getComponentSelector(classDeclaration);
+
+        ComponentInfo componentInfo = new ComponentInfo(componentName, selector);
+
+        // Extract properties from class elements
+        if (classDeclaration.getClassTail() != null &&
+                classDeclaration.getClassTail().getclassElement() != null) {
+
+            List<ClassElement> classElements = classDeclaration.getClassTail().getclassElement();
+            for (ClassElement element : classElements) {
+                if (element != null) {
+                    extractPropertyFromClassElement(element, componentInfo);
+                }
+            }
+        }
+
+        // Extract template
+        try {
+            if (classDeclaration.getDecoratorList() != null &&
+                    classDeclaration.getDecoratorList().getDecorator() != null &&
+                    !classDeclaration.getDecoratorList().getDecorator().isEmpty()) {
+
+                AST.HtmlElement templateElement = getTemplateElement(classDeclaration);
+                if (templateElement != null) {
+                    componentInfo.template = extractHtmlElement(templateElement);
+                }
+            }
+        } catch (Exception e) {
+            // If template extraction fails, continue without template
+            System.err.println("Warning: Could not extract template for component " + componentName + ": " + e.getMessage());
+        }
+
+        return componentInfo;
+    }
+
+    // Helper method to safely extract template element
+    private AST.HtmlElement getTemplateElement(ClassDeclaration classDeclaration) {
+        try {
+            return classDeclaration.getDecoratorList()
+                    .getDecorator().get(0).getDecoratorCallExpression().getArguments()
+                    .getArgumentList().getArgument().get(0).getSingleExpression()
+                    .getObjectLiteral().getPropertyAssignment().get(1)
+                    .getSingleExpression().get(0).getHtmlElement();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Helper method to extract property from class element
+    private void extractPropertyFromClassElement(ClassElement element, ComponentInfo componentInfo) {
+        try {
+            if (element.getStatement() != null &&
+                    element.getStatement().getVariableStatement() != null &&
+                    element.getStatement().getVariableStatement().getVariableDeclarationList() != null &&
+                    element.getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration() != null &&
+                    !element.getStatement().getVariableStatement().getVariableDeclarationList().getVariableDeclaration().isEmpty()) {
+
+                VariableDeclaration varDecl = element.getStatement()
+                        .getVariableStatement().getVariableDeclarationList()
+                        .getVariableDeclaration().get(0);
+
+                if (varDecl.getIdentifierOrKeyWord() != null &&
+                        varDecl.getIdentifierOrKeyWord().getIdentifier() != null) {
+                    String propName = varDecl.getIdentifierOrKeyWord().getIdentifier().getIdentifier();
+                    componentInfo.properties.add(propName);
+                }
+            } else if (element.getPropertyMemberDeclaration() != null &&
+                    element.getPropertyMemberDeclaration().getPropertyName() != null &&
+                    element.getPropertyMemberDeclaration().getPropertyName().getIdentifierName() != null &&
+                    element.getPropertyMemberDeclaration().getPropertyName().getIdentifierName().getIdentifier() != null) {
+                String propName = element.getPropertyMemberDeclaration()
+                        .getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
+                componentInfo.properties.add(propName);
+            }
+        } catch (Exception e) {
+            // Skip this property if extraction fails
+            System.err.println("Warning: Could not extract property from class element: " + e.getMessage());
+        }
+    }
+
+    // Generic HTML element generation
+    private void generateHtmlElement(HtmlElement element, String varPrefix, String indent, FileWriter fw) {
+        if (element == null) return;
+
+        String elementVar = varPrefix + element.tagName;
+
+        // Create element
+        generate(indent + "const " + elementVar + " = document.createElement('" + element.tagName + "');", fw);
         generate("\n", fw);
+
+        // Set attributes
+        for (Map.Entry<String, String> attr : element.attributes.entrySet()) {
+            String attrName = attr.getKey();
+            String attrValue = attr.getValue();
+
+            if ("class".equals(attrName)) {
+                generate(indent + elementVar + ".className = " + attrValue + ";", fw);
+            } else if (attrName.startsWith("*ng") || attrName.startsWith("ng-")) {
+                // Handle Angular directives - these are processed separately
+                continue;
+            } else {
+                generate(indent + elementVar + "." + attrName + " = " + attrValue + ";", fw);
+            }
+            generate("\n", fw);
+        }
+
+        // Set text content or interpolation
+        if (element.interpolation != null && !element.interpolation.isEmpty()) {
+            String[] parts = element.interpolation.split("\\.");
+            if (parts.length == 2) {
+                generate(indent + elementVar + ".textContent = this." + parts[0] + "." + parts[1] + ";", fw);
+            } else {
+                generate(indent + elementVar + ".textContent = this." + element.interpolation + ";", fw);
+            }
+            generate("\n", fw);
+        } else if (element.textContent != null) {
+            generate(indent + elementVar + ".textContent = '" + element.textContent + "';", fw);
+            generate("\n", fw);
+        }
+
+        // Generate children
+        for (int i = 0; i < element.children.size(); i++) {
+            HtmlElement child = element.children.get(i);
+            String childVarPrefix = varPrefix + element.tagName + "Child" + i;
+            generateHtmlElement(child, childVarPrefix, indent, fw);
+
+            // Append child to parent
+            String childVar = childVarPrefix + child.tagName;
+            generate(indent + elementVar + ".appendChild(" + childVar + ");", fw);
+            generate("\n", fw);
+        }
+    }
+
+    // Generic component generation
+    private void generateComponent(ComponentInfo componentInfo, FileWriter fw) {
+        generate("function " + componentInfo.name + "() {", fw);
+        generate("\n", fw);
+
+        // Initialize properties
+        for (String property : componentInfo.properties) {
+            generate("    this." + property + " = null;", fw);
+            generate("\n", fw);
+        }
+
         generate("}", fw);
         generate("\n\n", fw);
 
         // Generate render method
-        String selector = getComponentSelector(classDeclaration);
+        generateComponentRenderMethod(componentInfo, fw);
+    }
 
-        generate("ProductDetailsComponent.prototype.render = function("+item+") {", fw);
+    private void generateComponentRenderMethod(ComponentInfo componentInfo, FileWriter fw) {
+        String methodParams = "";
+        if (!componentInfo.properties.isEmpty()) {
+            methodParams = componentInfo.properties.get(0); // Usually the main data property
+        }
+
+        generate(componentInfo.name + ".prototype.render = function(" + methodParams + ") {", fw);
         generate("\n", fw);
-        generate("    this."+item+" = "+item+";", fw);
-        generate("\n", fw);
-        generate("    const container = document.getElementById(" + selector + ");", fw);
+
+        if (!methodParams.isEmpty()) {
+            generate("    this." + methodParams + " = " + methodParams + ";", fw);
+            generate("\n", fw);
+        }
+
+        generate("    const container = document.getElementById(" + componentInfo.selector + ");", fw);
         generate("\n", fw);
         generate("    container.innerHTML = '';", fw);
         generate("\n\n", fw);
-        generate("    if (!this."+item+") {", fw);
+
+        // Handle conditional rendering
+        if (componentInfo.template != null &&
+                componentInfo.template.attributes.containsKey("*ngIf")) {
+            generate("    if (!this." + methodParams + ") {", fw);
+            generate("\n", fw);
+            generate("        return;", fw);
+            generate("\n", fw);
+            generate("    }", fw);
+            generate("\n", fw);
+        }
+
+        // Generate template elements
+        if (componentInfo.template != null) {
+            generateHtmlElement(componentInfo.template, "", "    ", fw);
+            generate("\n", fw);
+            generate("    container.appendChild(" + componentInfo.template.tagName + ");", fw);
+            generate("\n", fw);
+        }
+
+        generate("};", fw);
+        generate("\n", fw);
+    }
+
+    private void generateClassDeclaration(ClassDeclaration classDeclaration, String s, FileWriter fw) {
+        if (classDeclaration == null ||
+                classDeclaration.getIdentifier() == null ||
+                classDeclaration.getClassTail() == null) {
+            return; // Skip invalid class declarations
+        }
+
+        String componentName = classDeclaration.getIdentifier().getIdentifier();
+
+        // Extract component information dynamically
+        ComponentInfo componentInfo = extractComponentInfo(classDeclaration);
+        if (componentInfo == null) {
+            System.err.println("Warning: Could not extract component info for " + componentName);
+            return;
+        }
+
+        // Use specialized generation for known components, otherwise use generic
+        if ("ProductDetailsComponent".equals(componentName)) {
+            generateProductDetailsComponent(classDeclaration,
+                    classDeclaration.getClassTail().getclassElement(), fw);
+        } else if ("ProductListComponent".equals(componentName)) {
+            generateProductListComponent(classDeclaration,
+                    classDeclaration.getClassTail().getclassElement(), fw);
+        } else if ("AppComponent".equals(componentName)) {
+            generateAppComponent(classDeclaration, componentInfo, fw);
+        } else {
+            // Generic component generation
+            generateComponent(componentInfo, fw);
+        }
+    }
+
+    // Specialized AppComponent generation with dynamic elements
+    private void generateAppComponent(ClassDeclaration classDeclaration, ComponentInfo componentInfo, FileWriter fw) {
+        generate("function " + componentInfo.name + "() {", fw);
+        generate("\n", fw);
+
+        // Extract and generate properties dynamically
+        List<ClassElement> classElements = classDeclaration.getClassTail().getclassElement();
+
+        for (ClassElement element : classElements) {
+            if (element.getStatement() != null &&
+                    element.getStatement().getVariableStatement() != null) {
+
+                VariableDeclaration varDecl = element.getStatement()
+                        .getVariableStatement().getVariableDeclarationList()
+                        .getVariableDeclaration().get(0);
+
+                String propName = varDecl.getIdentifierOrKeyWord().getIdentifier().getIdentifier();
+
+                if (varDecl.getSingleExpression() != null &&
+                        !varDecl.getSingleExpression().isEmpty() &&
+                        varDecl.getSingleExpression().get(0).getArrayLiteral() != null) {
+
+                    // This is an array property (like products)
+                    generateArrayProperty(varDecl, fw);
+                } else {
+                    // Simple property
+                    generate("    this." + propName + " = null;", fw);
+                    generate("\n", fw);
+                }
+            }
+        }
+
+        generate("}", fw);
+        generate("\n\n", fw);
+
+        // Generate methods dynamically
+        generateAppComponentMethods(classDeclaration, componentInfo, fw);
+    }
+
+    private void generateArrayProperty(VariableDeclaration varDecl, FileWriter fw) {
+        String propName = varDecl.getIdentifierOrKeyWord().getIdentifier().getIdentifier();
+        generate("    this." + propName + " = [", fw);
+        generate("\n", fw);
+
+        ArrayLiteral arrayLiteral = varDecl.getSingleExpression().get(0).getArrayLiteral();
+        if (arrayLiteral != null && arrayLiteral.getElementList() != null) {
+            ElementList elementList = arrayLiteral.getElementList();
+
+            // Get the type name for constructor calls
+            String typeName = "";
+            if (varDecl.getTypeAnnotation() != null) {
+                typeName = varDecl.getTypeAnnotation().getType_()
+                        .getUnionOrIntersectionOrPrimaryType().getPrimaryType().getPrimaryType().get(0)
+                        .getTypeReference().getTypeName().getIdentifier().getIdentifier();
+            }
+
+            for (ArrayElement arrayElement : elementList.getArrayElement()) {
+                if (arrayElement.getSingleExpression() != null &&
+                        arrayElement.getSingleExpression().getObjectLiteral() != null) {
+
+                    generateObjectConstructorCall(arrayElement.getSingleExpression().getObjectLiteral(),
+                            typeName, fw);
+                }
+            }
+        }
+
+        generate("    ];", fw);
+        generate("\n", fw);
+    }
+
+    private void generateObjectConstructorCall(ObjectLiteral objectLiteral, String typeName, FileWriter fw) {
+        generate("        new " + typeName + "(", fw);
+
+        List<PropertyAssignment> properties = objectLiteral.getPropertyAssignment();
+        for (int i = 0; i < properties.size(); i++) {
+            if (i > 0) {
+                generate(", ", fw);
+            }
+
+            PropertyAssignment property = properties.get(i);
+            SingleExpression valueExpression = property.getSingleExpression().get(0);
+
+            if (valueExpression.getLiteral() != null) {
+                if (valueExpression.getLiteral().getNumericLiteral() != null) {
+                    generate(valueExpression.getLiteral().getNumericLiteral().getDecimalLiteral(), fw);
+                } else if (valueExpression.getLiteral().getStringLiteral() != null) {
+                    generate(valueExpression.getLiteral().getStringLiteral(), fw);
+                }
+            }
+        }
+
+        generate("),", fw);
+        generate("\n", fw);
+    }
+
+    private void generateAppComponentMethods(ClassDeclaration classDeclaration, ComponentInfo componentInfo, FileWriter fw) {
+        // Extract method information dynamically
+        List<ClassElement> classElements = classDeclaration.getClassTail().getclassElement();
+
+        // Generate setChoosenProduct method
+        if (classElements.size() >= 2) {
+            String choosenProductProp = classElements.get(1).getStatement()
+                    .getVariableStatement().getVariableDeclarationList()
+                    .getVariableDeclaration().get(0).getIdentifierOrKeyWord()
+                    .getIdentifier().getIdentifier();
+
+            String productsProp = classElements.get(0).getStatement()
+                    .getVariableStatement().getVariableDeclarationList()
+                    .getVariableDeclaration().get(0).getIdentifierOrKeyWord()
+                    .getIdentifier().getIdentifier();
+
+            generate(componentInfo.name + ".prototype.setChoosenProduct = function(productId) {", fw);
+            generate("\n", fw);
+            generate("    this." + choosenProductProp + " = productId;", fw);
+            generate("\n", fw);
+            generate("    this.render();", fw);
+            generate("\n", fw);
+            generate("    ProductDetailsComponent.prototype.render(this." + productsProp + "[this." + choosenProductProp + "]);", fw);
+            generate("\n", fw);
+            generate("};", fw);
+            generate("\n\n", fw);
+        }
+
+        // Generate render method
+        generateAppComponentRenderMethod(classDeclaration, componentInfo, fw);
+    }
+
+    private void generateAppComponentRenderMethod(ClassDeclaration classDeclaration, ComponentInfo componentInfo, FileWriter fw) {
+        generate(componentInfo.name + ".prototype.render = function() {", fw);
+        generate("\n", fw);
+        generate("    const container = document.getElementById(" + componentInfo.selector + ");", fw);
+        generate("\n", fw);
+        generate("    container.innerHTML = '';", fw);
+        generate("\n\n", fw);
+
+        // Check for *ngFor directive in template
+        if (componentInfo.template != null && hasNgForDirective(componentInfo.template)) {
+            String productsProp = "products"; // This could be extracted dynamically
+            String buttonTag = "button"; // This could be extracted dynamically
+            String divTag = componentInfo.template.tagName;
+
+            generate("    for (const item of this." + productsProp + ") {", fw);
+            generate("\n", fw);
+            generate("        const " + buttonTag + " = document.createElement('" + buttonTag + "');", fw);
+            generate("\n", fw);
+            generate("        " + buttonTag + ".onclick = () => this.setChoosenProduct(item.productId);", fw);
+            generate("\n\n", fw);
+            generate("        const productList = document.createElement('" + divTag + "');", fw);
+            generate("\n", fw);
+            generate("        productList.innerHTML = ProductListComponent.prototype.render(item);", fw);
+            generate("\n", fw);
+            generate("        " + buttonTag + ".appendChild(productList);", fw);
+            generate("\n\n", fw);
+            generate("        container.appendChild(" + buttonTag + ");", fw);
+            generate("\n", fw);
+            generate("    }", fw);
+            generate("\n", fw);
+        }
+
+        generate("};", fw);
+        generate("\n\n", fw);
+    }
+
+    private boolean hasNgForDirective(HtmlElement element) {
+        if (element.attributes.containsKey("*ngFor") || element.attributes.containsKey("ngFor")) {
+            return true;
+        }
+        for (HtmlElement child : element.children) {
+            if (hasNgForDirective(child)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private void generateProductDetailsComponent(ClassDeclaration classDeclaration, List<ClassElement> classElements, FileWriter fw) {
+        ComponentInfo componentInfo = extractComponentInfo(classDeclaration);
+
+        generate("function " + componentInfo.name + "() {", fw);
+        generate("\n", fw);
+
+        // Initialize properties dynamically
+        for (String property : componentInfo.properties) {
+            generate("    this." + property + " = null;", fw);
+            generate("\n", fw);
+        }
+
+        generate("}", fw);
+        generate("\n\n", fw);
+
+        // Generate render method with dynamic template processing
+        generate(componentInfo.name + ".prototype.render = function(item) {", fw);
+        generate("\n", fw);
+        generate("    this.item = item;", fw);
+        generate("\n", fw);
+        generate("    const container = document.getElementById(" + componentInfo.selector + ");", fw);
+        generate("\n", fw);
+        generate("    container.innerHTML = '';", fw);
+        generate("\n\n", fw);
+        generate("    if (!this.item) {", fw);
         generate("\n", fw);
         generate("        return;", fw);
         generate("\n", fw);
         generate("    }", fw);
         generate("\n", fw);
-        String htmlTagStartName = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlTagStartName().getHtmlTagName().getIdentifier();
-        String className = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlAttribute().get(0).getHtmlAttributeValue().getStringLiteral();
-        //h1
-        String htmlTagStartName1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlTagStartName().getHtmlTagName().getIdentifier();
-        //img
-        String htmlTagStartName2=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlTagName().getIdentifier();
-        //src
-        String htmlAttribute=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlAttribute().get(0).getHtmlAttributeName().getIdentifiers().get(0);
-        //price
-        String htmlAttribute1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(2).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier();
-        //details
-        String htmlAtrribute2=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(3).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier();
-        //p number 1
-        String htmlTagName=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(2).getHtmlTagStartName().getHtmlTagName().getIdentifier();
-        //p number 2
-        String htmlTagName1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(3).getHtmlTagStartName().getHtmlTagName().getIdentifier();
 
-        if (angularDirective != null) {
-            if (htmlTagStartName != null) {
-                generate("    const " + htmlTagStartName + " = document.createElement('" + htmlTagStartName + "');", fw);
-                generate("\n", fw);
-                generate("    " + htmlTagStartName + ".className = " + className + ";", fw);
-                generate("\n", fw);
-
-            }
-        }
-        String interpolationExpression = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().toString()/*getHtmlAttribute().get(0).getHtmlAttributeName().getAngularDirective()*/;
-        if (interpolationExpression != null) {
-            generate("    const "+htmlTagStartName1+" = document.createElement('"+htmlTagStartName1+"');", fw);
+        // Generate template elements dynamically
+        if (componentInfo.template != null) {
+            generateHtmlElement(componentInfo.template, "", "    ", fw);
             generate("\n", fw);
-            generate("    "+htmlTagStartName1+".textContent = this."+classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getPropertyName().getIdentifierName().getIdentifier().getIdentifier()+"."+classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier()+";", fw);
+            generate("    container.appendChild(" + componentInfo.template.tagName + ");", fw);
             generate("\n", fw);
         }
-        //name
-        String name=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlContent().getInterpolationExpressions().get(0).getHtmlSequence().getIdentifierName().getIdentifier().getIdentifier();
-        if (htmlTagStartName2 != null) {
-            if (htmlAttribute != null) {
-                generate("    const "+htmlTagStartName2+" = document.createElement('"+htmlTagStartName2+"');", fw);
-                generate("\n", fw);
-                generate("    "+htmlTagStartName2+"."+htmlAttribute+" = this."+item+".imgSrc;", fw);
-                generate("\n", fw);
-                generate("    "+htmlTagStartName2+".alt = this."+item+"."+name+";", fw);
-                generate("\n\n", fw);
-            }
-        }
-        generate("\n", fw);
-        generate("    const "+htmlAttribute1+" = document.createElement('"+htmlTagName+"');", fw);
-        generate("\n", fw);
-        generate("    "+htmlAttribute1+".textContent = `Price: $${this."+item+"."+htmlAttribute1+"}`;", fw);
-        generate("\n\n", fw);
 
-        generate("    // {{item.details}} conversion", fw);
-        generate("\n", fw);
-        generate("    const "+htmlAtrribute2+" = document.createElement('"+htmlTagName1+"');", fw);
-        generate("\n", fw);
-        generate("    "+htmlAtrribute2+".textContent = this."+item+"."+htmlAtrribute2+";", fw);
-        generate("\n\n", fw);
-
-        generate("    "+htmlTagStartName+".appendChild("+htmlTagStartName1+");", fw);
-        generate("\n", fw);
-        generate("    "+htmlTagStartName+".appendChild("+htmlTagStartName2+");", fw);
-        generate("\n", fw);
-        generate("    "+htmlTagStartName+".appendChild("+htmlAttribute1+");", fw);
-        generate("\n", fw);
-        generate("    "+htmlTagStartName+".appendChild("+htmlAtrribute2+");", fw);
-        generate("\n\n", fw);
-        generate("    container.appendChild("+htmlTagStartName+");", fw);
-        generate("\n", fw);
         generate("};", fw);
-        generate("\n", fw);
-
+        generate("\n\n", fw);
     }
-    //TODO: h1,img,div in one "for" loop maybe ?
-    //TODO: one sample for all html elements maybe ?
-    //TODO: one sample for components in one for loop maybe ?
-    //TODO: one sample for html contents maybe ?
-    //TODO: implement the html attribute,tag of the same html content/element maybe ?
 
     private void generateProductListComponent(ClassDeclaration classDeclaration, List<ClassElement> classElements, FileWriter fw) {
-        //ProductListComponent
-        String componentClass = classDeclaration.getIdentifier().getIdentifier();
-        //data
-        String componentClassProperty = classDeclaration.getClassTail().getclassElement().get(0).getPropertyMemberDeclaration().getPropertyName().getIdentifierName().getIdentifier().getIdentifier();
-        //TODO: null statement
-        generate("    this."+componentClassProperty+" = null;", fw);
+        ComponentInfo componentInfo = extractComponentInfo(classDeclaration);
+
+        generate("function " + componentInfo.name + "() {", fw);
         generate("\n", fw);
+
+        // Initialize properties dynamically
+        for (String property : componentInfo.properties) {
+            generate("    this." + property + " = null;", fw);
+            generate("\n", fw);
+        }
+
         generate("}", fw);
         generate("\n\n", fw);
 
-        //div
-        String htmlTagStartName = classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlTagStartName().getHtmlTagName().getIdentifier();
-        //h1
-        String htmlTagStartName1=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(0).getHtmlTagStartName().getHtmlTagName().getIdentifier();
-        //img
-        String htmlTagName=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlTagName().getIdentifier();
-        //src
-        String htmlAttribute=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlAttribute().get(0).getHtmlAttributeName().getIdentifiers().get(0);
-        //src
-        String htmlAttributeValue=classDeclaration.getDecoratorList().getDecorator().get(0).getDecoratorCallExpression().getArguments().getArgumentList().getArgument().get(0).getSingleExpression().getObjectLiteral().getPropertyAssignment().get(1).getSingleExpression().get(0).getHtmlElement().getHtmlContent().getHtmlElement().get(1).getHtmlAttribute().get(0).getHtmlAttributeValue().getStringLiteral();
+        // Generate render method
+        String dataParam = componentInfo.properties.isEmpty() ? "data" : componentInfo.properties.get(0);
 
-        generate(componentClass+".prototype.render = function("+componentClassProperty+") {", fw);
+        generate(componentInfo.name + ".prototype.render = function(" + dataParam + ") {", fw);
         generate("\n", fw);
-        generate("    this."+componentClassProperty+" = "+componentClassProperty+";", fw);
+        generate("    this." + dataParam + " = " + dataParam + ";", fw);
         generate("\n", fw);
-        generate("    const "+htmlTagStartName+" = document.createElement('"+htmlTagStartName+"');", fw);
-        generate("\n\n", fw);
-        generate("\n", fw);
-        generate("    const "+htmlTagStartName1+" = document.createElement('"+htmlTagStartName1+"');", fw);
-        generate("\n", fw);
-        generate("    "+htmlTagStartName1+".textContent = this."+componentClassProperty+".name;", fw);
-        generate("\n\n", fw);
 
-        generate("\n", fw);
-        generate("    const "+htmlTagName+" = document.createElement('"+htmlTagName+"');", fw);
-        generate("\n", fw);
-        //TODO : CUT THE " " FROM THE imgSrc STRING
-        generate("    "+htmlTagName+"."+htmlAttribute+" = this."+componentClassProperty+".imgSrc;", fw);
-        generate("\n", fw);
-        generate("    "+htmlTagName+".alt = this."+componentClassProperty+".name;", fw);
-        generate("\n\n", fw);
+        // Generate template elements dynamically
+        if (componentInfo.template != null) {
+            generateHtmlElement(componentInfo.template, "", "    ", fw);
+            generate("\n", fw);
+            generate("    return " + componentInfo.template.tagName + ".outerHTML;", fw);
+            generate("\n", fw);
+        }
 
-        generate("    "+htmlTagStartName+".appendChild("+htmlTagStartName1+");", fw);
-        generate("\n", fw);
-        generate("    "+htmlTagStartName+".appendChild("+htmlTagName+");", fw);
-        generate("\n\n", fw);
-
-        generate("    return "+htmlTagStartName+".outerHTML;", fw);
-        generate("\n", fw);
         generate("};", fw);
-        generate("\n", fw);
+        generate("\n\n", fw);
     }
 
     private String getComponentSelector(ClassDeclaration classDeclaration) {
@@ -386,6 +720,10 @@ public class AngularGenerator {
             return "'app-root'"; // default selector
         }
     }
+
+    // Keep existing methods for compatibility, but they can now be simplified
+    // using the dynamic generation helpers
+
     private void generateClassElement(ClassElement classElement, String s, FileWriter fw) {
         if (classElement.getStatement() != null) {
             generateStatement(classElement.getStatement(), s, fw);
@@ -404,7 +742,6 @@ public class AngularGenerator {
             generateStatementList(block.getStatementList(), s, fw);
         }
         completeInterfaceGeneration(fw);
-
     }
 
     private void completeInterfaceGeneration(FileWriter fw) {
@@ -465,7 +802,6 @@ public class AngularGenerator {
     }
 
     private void generateVariableDeclaration(VariableDeclaration variableDeclaration, String s, FileWriter fw, String name, String attribute, Boolean hasContent) {
-//        generate("    constructor(",fw);
         if (variableDeclaration.getIdentifierOrKeyWord() != null) {
             String propName = variableDeclaration.getIdentifierOrKeyWord().getIdentifier().getIdentifier();
             if (isGeneratingInterface) {
@@ -520,13 +856,11 @@ public class AngularGenerator {
                         nextExpression.getIdentifierName().getIdentifier() != null) {
 
                     // Found interface declaration: interface Product
-//                    String interfaceName = nextExpression.getIdentifierName().getIdentifier().getIdentifier();
                     currentInterfaceName = nextExpression.getIdentifierName().getIdentifier().getIdentifier();
                     isGeneratingInterface = true;
                     interfaceProperties.clear(); // Reset properties list
                     generate("class " + currentInterfaceName + " {", fw);
                     generate("\n", fw);
-//                    generate("    constructor(",fw);
                 }
             }
 
@@ -598,6 +932,7 @@ public class AngularGenerator {
             generateSingleExpression(arrayElement.getSingleExpression(), s, fw, "", "", false);
         }
     }
+
     private void generateIdentifierName(IdentifierName identifierName, String s, FileWriter fw, String name) {
         if (identifierName.getReservedWord() != null) {
             generateReservedWord(identifierName.getReservedWord(), s, fw, name);

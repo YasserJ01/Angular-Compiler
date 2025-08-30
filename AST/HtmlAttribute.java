@@ -5,6 +5,7 @@ public class HtmlAttribute {
     HtmlAttributeValue htmlAttributeValue;
     String AngularDirective;
     PropertyName propertyName;
+    String stringLiteral;
 
 
     String Classe;
@@ -47,6 +48,14 @@ public class HtmlAttribute {
 
     public void setPropertyName(PropertyName propertyName) {
         this.propertyName = propertyName;
+    }
+
+    public String getStringLiteral() {
+        return stringLiteral;
+    }
+
+    public void setStringLiteral(String stringLiteral) {
+        this.stringLiteral = stringLiteral;
     }
 
     @Override

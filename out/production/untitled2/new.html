@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Angular to HTML Conversion</title>
+  <style>
+        /* shared styles */
+        body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:20px;}
+        .product-details,
+        .add-product-form,
+        .edit-product-form{
+            margin:20px;
+            padding:15px;
+            border:1px solid #ccc;
+            border-radius:5px;
+            max-width:400px;
+        }
+        .product-buttons{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
+        .product-buttons > button{
+            position:relative;
+            padding:10px;
+            border:1px solid #ddd;
+            border-radius:5px;
+            background:white;
+            text-align:center;
+            cursor:pointer;
+        }
+        .product-actions button{
+            margin:0 5px;
+            padding:5px 10px;
+        }
+        input,textarea{
+            display:block;
+            width:100%;
+            margin:10px 0;
+            padding:5px;
+        }
+        img{max-width:100%;height:auto;border-radius:5px;}
+  </style>
+</head>
+
+<body>
+
+<!-- ADD FORM -->
+<div class="add-product-form">
+  <h2>Add New Product</h2>
+  <input  id="newName"   placeholder="Product Name">
+  <input  id="newPrice"  type="number" placeholder="Price">
+  <input  id="newImg"    placeholder="Image URL">
+  <textarea id="newDetail" placeholder="Details"></textarea>
+  <button onclick="addProduct()">Add Product</button>
+</div>
+
+<!-- PRODUCT LIST -->
+<div id="product-buttons" class="product-buttons"></div>
+
+<!-- DETAILS -->
+<div id="app-product-details"></div>
+
+<!-- EDIT FORM -->
+<div id="editForm" class="edit-product-form" style="display:none">
+  <h2>Edit Product</h2>
+  <input  id="editName"   placeholder="Product Name">
+  <input  id="editPrice"  type="number" placeholder="Price">
+  <input  id="editImg"    placeholder="Image URL">
+  <textarea id="editDetail" placeholder="Details"></textarea>
+  <button onclick="finishEditing()">Save Changes</button>
+  <button onclick="cancelEditing()">Cancel</button>
+</div>
+
+<script>
+/* ---------- data model ---------- */
+class Product {
+    constructor(productId, name, price, imgSrc, details) {
+        this.productId = productId;
+        this.name      = name;
+        this.price     = price;
+        this.imgSrc    = imgSrc;
+        this.details   = details;
+    }
+}
+
+/* ---------- initial state ---------- */
+const state = {
+    products: [
+        new Product(0, "Pizza",    200, "../Files/pizza.png",   "Delicious cheese pizza"),
+        new Product(1, "Salad",    400, "../Files/salad.png",   "Fresh garden salad"),
+        new Product(2, "Sandwich", 700, "../Files/sandwich.png","Club sandwich"),
+        new Product(3, "Soup",     500, "../Files/soup.png",    "Hot tomato soup")
+    ],
+    chosen: null,
+    editing: null
+};
+
+/* ---------- render helpers ---------- */
+function productListHtml(product) {
+    return `
+        <div>
+          <h3>${product.name}</h3>
+          <img src="${product.imgSrc}" alt="${product.name}" width="100">
+          <p>$${product.price}</p>
+        </div>
+    `;
+}
+
+function productDetailsHtml(product) {
+    return `
+        <div class="product-details">
+          <h1>${product.name}</h1>
+          <img src="${product.imgSrc}" alt="${product.name}">
+          <p>Price: $${product.price}</p>
+          <p>${product.details}</p>
+        </div>
+    `;
+}
+
+/* ---------- render functions ---------- */
+function renderProducts() {
+    const container = document.getElementById('product-buttons');
+    container.innerHTML = '';
+    state.products.forEach((p, idx) => {
+        const wrap = document.createElement('button');
+        wrap.innerHTML = productListHtml(p);
+
+        const actions = document.createElement('div');
+        actions.className = 'product-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = e => { e.stopPropagation(); startEdit(idx); };
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = e => { e.stopPropagation(); deleteProduct(p.productId); };
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        wrap.appendChild(actions);
+
+        wrap.onclick = () => showDetails(p.productId);
+        container.appendChild(wrap);
+    });
+}
+
+function showDetails(productId) {
+    state.chosen = productId;
+    state.editing = null;
+    const detailsDiv = document.getElementById('app-product-details');
+    const product = state.products.find(p => p.productId === productId);
+    detailsDiv.innerHTML = product ? productDetailsHtml(product) : '';
+    document.getElementById('editForm').style.display = 'none';
+}
+
+/* ---------- CRUD ---------- */
+function addProduct() {
+    const name   = document.getElementById('newName').value.trim();
+    const price  = Number(document.getElementById('newPrice').value);
+    const imgSrc = document.getElementById('newImg').value.trim();
+    const detail = document.getElementById('newDetail').value.trim();
+    if (!name || isNaN(price)) return;
+
+    const newId = state.products.length ? Math.max(...state.products.map(p => p.productId)) + 1 : 0;
+    state.products.push(new Product(newId, name, price, imgSrc, detail));
+
+    clearAddForm();
+    renderProducts();
+}
+
+function startEdit(idx) {
+    state.editing = idx;
+    state.chosen = null;
+    document.getElementById('app-product-details').innerHTML = '';
+
+    const p = state.products[idx];
+    document.getElementById('editName').value   = p.name;
+    document.getElementById('editPrice').value  = p.price;
+    document.getElementById('editImg').value    = p.imgSrc;
+    document.getElementById('editDetail').value = p.details;
+    document.getElementById('editForm').style.display = 'block';
+}
+
+function finishEditing() {
+    const p = state.products[state.editing];
+    p.name    = document.getElementById('editName').value.trim();
+    p.price   = Number(document.getElementById('editPrice').value);
+    p.imgSrc  = document.getElementById('editImg').value.trim();
+    p.details = document.getElementById('editDetail').value.trim();
+
+    cancelEditing();
+    renderProducts();
+    showDetails(p.productId);
+}
+
+function deleteProduct(productId) {
+    if (!confirm('Delete this product?')) return;
+    state.products = state.products.filter(p => p.productId !== productId);
+    if (state.chosen === productId) state.chosen = null;
+    if (state.editing !== null && state.products[state.editing]?.productId === productId) state.editing = null;
+
+    renderProducts();
+    document.getElementById('app-product-details').innerHTML = '';
+}
+
+function cancelEditing() {
+    state.editing = null;
+    document.getElementById('editForm').style.display = 'none';
+}
+
+function clearAddForm() {
+    ['newName','newPrice','newImg','newDetail'].forEach(id => document.getElementById(id).value = '');
+}
+
+/* ---------- bootstrap ---------- */
+renderProducts();
+</script>
+</body>
+</html>

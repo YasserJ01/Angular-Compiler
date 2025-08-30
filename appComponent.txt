@@ -1,0 +1,124 @@
+// app.component.ts
+import { Component } from '@angular/core';
+
+interface Product {
+  productId: number;
+  name: string;
+  price: number;
+  imgSrc: string;
+  details: string;
+}
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <div>
+      <!-- Add Product Form -->
+      <div class="add-product-form">
+        <h2>Add New Product</h2>
+        <input [(ngModel)]="newProduct.name" placeholder="Product Name">
+        <input [(ngModel)]="newProduct.price"  placeholder="Price">
+        <input [(ngModel)]="newProduct.imgSrc" placeholder="Image URL">
+        <textarea [(ngModel)]="newProduct.details" placeholder="Details"></textarea>
+        <button (click)="addProduct()">Add Product</button>
+      </div>
+
+      <!-- Product List -->
+      <div class="product-buttons">
+        <button *ngFor="let item of products" (click)="setChoosenProduct(item.productId)">
+          <app-product-list [data]="item"></app-product-list>
+          <div class="product-actions">
+            <button (click)="startEditProduct(item.productId); $event.stopPropagation()">Edit</button>
+            <button (click)="deleteProduct(item.productId); $event.stopPropagation()">Delete</button>
+          </div>
+        <button>
+      </div>
+
+      <!-- Product Details -->
+      <app-product-details [item]="products[choosenProduct]"></app-product-details>
+
+      <!-- Edit Product Form (shown when editing) -->
+      <div class="edit-product-form" *ngIf="editingProduct !== null">
+        <h2>Edit Product</h2>
+        <input [(ngModel)]="products[editingProduct].name" placeholder="Product Name">
+        <input [(ngModel)]="products[editingProduct].price"  placeholder="Price">
+        <input [(ngModel)]="products[editingProduct].imgSrc" placeholder="Image URL">
+        <textarea [(ngModel)]="products[editingProduct].details" placeholder="Details"></textarea>
+        <button (click)="finishEditing()">Save Changes<button>
+        <button (click)="cancelEditing()">Cancel<button>
+      </div>
+    </div>
+  `
+})
+export class AppComponent {
+  products: Product[] = [
+    { productId: 0, name: "Pizza", price: 200, imgSrc: "../Files/pizza.png", details: "Delicious cheese pizza" },
+    { productId: 1, name: "Salad", price: 400, imgSrc: "../Files/salad.png", details: "Fresh garden salad" },
+    { productId: 2, name: "Sandwich", price: 700, imgSrc: "../Files/sandwich.png", details: "Club sandwich" },
+    { productId: 3, name: "Soup", price: 500, imgSrc: "../Files/soup.png", details: "Hot tomato soup" }
+  ];
+
+  choosenProduct: number  null = null;
+  editingProduct: number  null = null;
+
+  newProduct: Partial<Product> = {
+    name: '',
+    price: 0,
+    imgSrc: '',
+    details: ''
+  };
+
+  setChoosenProduct(productId: number) {
+    this.choosenProduct = productId;
+    this.editingProduct = null; // Cancel editing if selecting a product
+  }
+
+  addProduct() {
+    const newId = this.products.length > 0
+      ? Math.max(...this.products.map(p => p.productId)) + 1
+      : 0;
+
+    this.products.push({
+      productId: newId,
+      name: this.newProduct.name || 'New Product',
+      price: this.newProduct.price || 0,
+      imgSrc: this.newProduct.imgSrc || '',
+      details: this.newProduct.details || ''
+    });
+
+    // Reset the form
+    this.newProduct = {
+      name: '',
+      price: 0,
+      imgSrc: '',
+      details: ''
+    };
+  }
+
+  startEditProduct(productId: number) {
+    this.editingProduct = productId;
+    this.choosenProduct = null; // Hide details when editing
+  }
+
+  finishEditing() {
+    this.editingProduct = null;
+  }
+
+  cancelEditing() {
+    this.editingProduct = null;
+  }
+
+  deleteProduct(productId: number) {
+    if (confirm('Are you sure you want to delete this product?')) {
+      this.products = this.products.filter(p => p.productId !== productId);
+
+      // Reset selections if deleted product was selected
+      if (this.choosenProduct === productId) {
+        this.choosenProduct = null;
+      }
+      if (this.editingProduct === productId) {
+        this.editingProduct = null;
+      }
+    }
+  }
+}

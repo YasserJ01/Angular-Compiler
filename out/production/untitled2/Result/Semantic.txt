@@ -1,2 +1,0 @@
-Semantic Check : 
-setChoosenProduct undefined this variable in the scope

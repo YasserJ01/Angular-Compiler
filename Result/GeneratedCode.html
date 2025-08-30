@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>React App</title>
+<title>Angular App</title>
 <link rel="stylesheet" href="generate.css"/>
 </head>
 <body>
@@ -12,6 +12,48 @@
 
 
 <script>
+class Product {
+    constructor(productId, name, price, imgSrc, details) {
+        this.productId = productId;
+        this.name = name;
+        this.price = price;
+        this.imgSrc = imgSrc;
+        this.details = details;
+    }
+}
+
+function AppComponent() {
+    this.products = [
+        new Product(0, "ProductName1", 200, "../Files/pizza.png", "Product Details 1"),
+        new Product(1, "ProductName2", 400, "../Files/salad.png", "Product Details 2"),
+        new Product(2, "ProductName3", 700, "../Files/sandwich.png", "Product Details 3"),
+        new Product(3, "ProductName4", 500, "../Files/soup.png", "Product Details 4"),
+    ];
+    this.choosenProduct = null;
+}
+
+AppComponent.prototype.setChoosenProduct = function(productId) {
+    this.choosenProduct = productId;
+    this.render();
+    ProductDetailsComponent.prototype.render(this.products[this.choosenProduct]);
+};
+
+AppComponent.prototype.render = function() {
+    const container = document.getElementById('app-root');
+    container.innerHTML = '';
+
+    for (const item of this.products) {
+        const button = document.createElement('button');
+        button.onclick = () => this.setChoosenProduct(item.productId);
+
+        const productList = document.createElement('div');
+        productList.innerHTML = ProductListComponent.prototype.render(item);
+        button.appendChild(productList);
+
+        container.appendChild(button);
+    }
+};
+
 function ProductDetailsComponent() {
     this.item = null;
 }
@@ -25,28 +67,39 @@ ProductDetailsComponent.prototype.render = function(item) {
         return;
     }
     const div = document.createElement('div');
-    div.className = "product-details";
-    const h1 = document.createElement('h1');
-    h1.textContent = this.item.name;
-    const img = document.createElement('img');
-    img.src = this.item.imgSrc;
-    img.alt = this.item.name;
-
-
-    const price = document.createElement('p');
-    price.textContent = `Price: $${this.item.price}`;
-
-    // {{item.details}} conversion
-    const details = document.createElement('p');
-    details.textContent = this.item.details;
-
-    div.appendChild(h1);
-    div.appendChild(img);
-    div.appendChild(price);
-    div.appendChild(details);
+    const divChild0h1 = document.createElement('h1');
+    divChild0h1.textContent = this.item.name;
+    div.appendChild(divChild0h1);
+    const divChild1img = document.createElement('img');
+    divChild1img.src = "item.imgSrc";
+    div.appendChild(divChild1img);
+    const divChild2p = document.createElement('p');
+    divChild2p.textContent = this.item.price;
+    div.appendChild(divChild2p);
+    const divChild3p = document.createElement('p');
+    divChild3p.textContent = this.item.details;
+    div.appendChild(divChild3p);
 
     container.appendChild(div);
 };
+
+function ProductListComponent() {
+    this.data = null;
+}
+
+ProductListComponent.prototype.render = function(data) {
+    this.data = data;
+    const div = document.createElement('div');
+    const divChild0h1 = document.createElement('h1');
+    divChild0h1.textContent = this.data.name;
+    div.appendChild(divChild0h1);
+    const divChild1img = document.createElement('img');
+    divChild1img.src = "data.imgSrc";
+    div.appendChild(divChild1img);
+
+    return div.outerHTML;
+};
+
         const app = new AppComponent();
         app.render();
         new ProductDetailsComponent();
